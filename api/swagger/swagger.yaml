@@ -108,6 +108,7 @@ definitions:
       - description
       - legalDescription
       - status
+      - tenureStage
       - publishDate
       - businessUnit
       - cl_file

@@ -11,6 +11,7 @@
     purpose          : { type: String },
     subpurpose       : { type: String },
     status           : { type: String },
+    tenureStage      : { type: String },
     region           : { type: String },
     location         : { type: String, default: '' },
     latitude         : { type: Number, default: 0.00 },
