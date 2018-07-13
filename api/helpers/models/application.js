@@ -19,6 +19,10 @@
     name             : { type: String, trim: true },
     postID           : { type: Number, default: 0 },
     publishDate      : { type: Date, default: Date.now },
+    purpose          : { type: String },
+    region           : { type: String },
+    status           : { type: String },
+    subpurpose       : { type: String },
     // Note: Default on tag property is purely for display only, they have no real effect on the model
     // This must be done in the code.
     tags             : [[{ type: String, trim: true, default: '[["sysadmin"]]' }]],

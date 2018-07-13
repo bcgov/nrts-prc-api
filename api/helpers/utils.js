@@ -7,6 +7,7 @@ var fs              = require('fs');
 var _serviceHost    = process.env.CLAMAV_SERVICE_HOST || '127.0.0.1';
 var _servicePort    = process.env.CLAMAV_SERVICE_PORT || '3310';
 
+// NB: this is only for object IDs
 exports.buildQuery = function (property, values, query) {
     var oids = [];
     if (_.isArray(values)) {
