@@ -453,8 +453,8 @@ paths:
           required: false
           description: "Whether to return deleted applications."
         - in: query
-          name: region
-          description: "Region filter."
+          name: regions
+          description: "Regions filter."
           required: false
           type: array
           collectionFormat: pipes
@@ -462,8 +462,8 @@ paths:
             type: string
             enum: *applicationRegions
         - in: query
-          name: cp_status
-          description: "Comment period status filter."
+          name: cpStatuses
+          description: "Comment period statuses filter."
           required: false
           type: array
           collectionFormat: pipes
@@ -471,8 +471,8 @@ paths:
             type: string
             enum: *applicationCpStatuses
         - in: query
-          name: status
-          description: "Application status filter."
+          name: statuses
+          description: "Application statuses filter."
           required: false
           type: array
           collectionFormat: pipes
@@ -766,8 +766,8 @@ paths:
             type: string
             enum: *applicationFields
         - in: query
-          name: region
-          description: "Region filter."
+          name: regions
+          description: "Regions filter."
           required: false
           type: array
           collectionFormat: pipes
@@ -775,8 +775,8 @@ paths:
             type: string
             enum: *applicationRegions
         - in: query
-          name: cp_status
-          description: "Comment period status filter."
+          name: cpStatuses
+          description: "Comment period statuses filter."
           required: false
           type: array
           collectionFormat: pipes
@@ -784,8 +784,8 @@ paths:
             type: string
             enum: *applicationCpStatuses
         - in: query
-          name: status
-          description: "Application status filter."
+          name: statuses
+          description: "Application statues filter."
           required: false
           type: array
           collectionFormat: pipes
