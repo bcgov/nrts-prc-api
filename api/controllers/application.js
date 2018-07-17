@@ -10,39 +10,99 @@ exports.protectedOptions = function (args, res, rest) {
 }
 
 exports.publicGet = function (args, res, next) {
-  // Build match query if on appId route
   var query = {};
+
+  // Never return deleted app(s).
+  _.assignIn(query, { isDeleted: false });
+
+  // Build match query if on appId route.
+  // Otherwise, build filter query.
   if (args.swagger.params.appId) {
     query = Utils.buildQuery("_id", args.swagger.params.appId.value, query);
+  } else {
+    if (args.swagger.params.regions && args.swagger.params.regions.value !== undefined) {
+      _.assignIn(query, { region: { $in: args.swagger.params.regions.value } });
+    }
+    if (args.swagger.params.cpStatuses && args.swagger.params.cpStatuses.value !== undefined) {
+      // TODO: compute cp_status from comment periods
+      // _.assignIn(query, { cp_status: { $in: args.swagger.params.cpStatuses.value } });
+    }
+    if (args.swagger.params.statuses && args.swagger.params.statuses.value !== undefined) {
+      _.assignIn(query, { status: { $in: args.swagger.params.statuses.value } });
+    }
+    if (args.swagger.params.client && args.swagger.params.client.value !== undefined) {
+      _.assignIn(query, { client: { $regex: args.swagger.params.client.value, $options: "i" } });
+    }
+    if (args.swagger.params.cl_file && args.swagger.params.cl_file.value !== undefined) {
+      // TODO: use $redact and then use conditional logic processing $indexOfCP
+      // ref: https://stackoverflow.com/questions/2908100/mongodb-regex-search-on-integer-value
+    }
+    if (args.swagger.params.tantalisID && args.swagger.params.tantalisID.value !== undefined) {
+      // TODO: use $redact and then use conditional logic processing $indexOfCP
+      // ref: https://stackoverflow.com/questions/2908100/mongodb-regex-search-on-integer-value
+    }
+    if (args.swagger.params.purpose && args.swagger.params.purpose.value !== undefined) {
+      _.assignIn(query, {
+        $or: [
+          { purpose: { $regex: args.swagger.params.purpose.value, $options: "i" } },
+          { subpurpose: { $regex: args.swagger.params.purpose.value, $options: "i" } }
+        ]
+      });
+    }
   }
-  _.assignIn(query, { isDeleted: false });
 
   getApplications(['public'], query, args.swagger.params.fields.value)
   .then(function (data) {
     return Actions.sendResponse(res, 200, data);
   });
 };
+
 exports.protectedGet = function(args, res, next) {
-  var self        = this;
-  self.scopes     = args.swagger.params.auth_payload.scopes;
+  // defaultLog.info("args.swagger.params:", args.swagger.params.auth_payload.scopes);
 
-  var Application = mongoose.model('Application');
-
-  defaultLog.info("args.swagger.params:", args.swagger.params.auth_payload.scopes);
-
-  // Build match query if on appId route
   var query = {};
-  if (args.swagger.params.appId) {
-    query = Utils.buildQuery("_id", args.swagger.params.appId.value, query);
-  }
-  if (args.swagger.params.tantalisId && args.swagger.params.tantalisId.value !== undefined) {
-    _.assignIn(query, { tantalisID: args.swagger.params.tantalisId.value });
-  }
-  // Unless they specifically ask for it, hide deleted results.
-  if (args.swagger.params.isDeleted && args.swagger.params.isDeleted.value !== undefined) {
-    _.assignIn(query, { isDeleted: args.swagger.params.isDeleted.value });
+
+  // Unless they specifically ask for it, don't return deleted app(s).
+  if (args.swagger.params.isDeleted && args.swagger.params.isDeleted.value === true) {
+    _.assignIn(query, { isDeleted: true });
   } else {
     _.assignIn(query, { isDeleted: false });
+  }
+
+  // Build match query if on appId route.
+  // Otherwise, build search query.
+  if (args.swagger.params.appId) {
+    query = Utils.buildQuery("_id", args.swagger.params.appId.value, query);
+  } else {
+    if (args.swagger.params.region && args.swagger.params.region.value !== undefined) {
+      _.assignIn(query, { region: { $in: args.swagger.params.region.value } });
+    }
+    if (args.swagger.params.cp_status && args.swagger.params.cp_status.value !== undefined) {
+      // TODO: compute cp_status from comment periods
+      // _.assignIn(query, { cp_status: { $in: args.swagger.params.cp_status.value } });
+    }
+    if (args.swagger.params.status && args.swagger.params.status.value !== undefined) {
+      _.assignIn(query, { status: { $in: args.swagger.params.status.value } });
+    }
+    if (args.swagger.params.client && args.swagger.params.client.value !== undefined) {
+      _.assignIn(query, { client: { $regex: args.swagger.params.client.value, $options: "i" } });
+    }
+    if (args.swagger.params.cl_file && args.swagger.params.cl_file.value !== undefined) {
+      // TODO: use $redact and then use conditional logic processing $indexOfCP
+      // ref: https://stackoverflow.com/questions/2908100/mongodb-regex-search-on-integer-value
+    }
+    if (args.swagger.params.tantalisID && args.swagger.params.tantalisID.value !== undefined) {
+      // TODO: use $redact and then use conditional logic processing $indexOfCP
+      // ref: https://stackoverflow.com/questions/2908100/mongodb-regex-search-on-integer-value
+    }
+    if (args.swagger.params.purpose && args.swagger.params.purpose.value !== undefined) {
+      _.assignIn(query, {
+        $or: [
+          { purpose: { $regex: args.swagger.params.purpose.value, $options: "i" } },
+          { subpurpose: { $regex: args.swagger.params.purpose.value, $options: "i" } }
+        ]
+      });
+    }
   }
 
   getApplications(args.swagger.params.auth_payload.scopes, query, args.swagger.params.fields.value)
@@ -76,7 +136,7 @@ exports.protectedDelete = function (args, res, next) {
   });
 }
 
-//  Create a new application
+// Create a new application.
 exports.protectedPost = function (args, res, next) {
   var obj = args.swagger.params.app.value;
   defaultLog.info("Incoming new object:", obj);
@@ -94,7 +154,7 @@ exports.protectedPost = function (args, res, next) {
   });
 };
 
-// Update an existing application
+// Update an existing application.
 exports.protectedPut = function (args, res, next) {
   var objId = args.swagger.params.appId.value;
   defaultLog.info("ObjectID:", args.swagger.params.appId.value);
@@ -126,7 +186,7 @@ exports.protectedPut = function (args, res, next) {
   });
 }
 
-// Publish/Unpublish the application
+// Publish the application.
 exports.protectedPublish = function (args, res, next) {
   var objId = args.swagger.params.appId.value;
   defaultLog.info("Publish Application:", objId);
@@ -151,6 +211,8 @@ exports.protectedPublish = function (args, res, next) {
     }
   });
 };
+
+// Unpublish the application.
 exports.protectedUnPublish = function (args, res, next) {
   var objId = args.swagger.params.appId.value;
   defaultLog.info("UnPublish Application:", objId);
@@ -175,6 +237,7 @@ exports.protectedUnPublish = function (args, res, next) {
     }
   });
 };
+
 var getApplications = function (role, query, fields) {
   return new Promise(function (resolve, reject) {
     var Application = mongoose.model('Application');
@@ -203,6 +266,10 @@ var getApplications = function (role, query, fields) {
                         'name',
                         'postID',
                         'publishDate',
+                        'purpose',
+                        'region',
+                        'status',
+                        'subpurpose',
                         'tantalisID'], f) !== -1);
     });
     _.each(sanitizedFields, function (f) {

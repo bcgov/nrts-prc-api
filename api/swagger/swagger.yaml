@@ -106,7 +106,38 @@ definitions:
       - name
       - postID
       - publishDate
+      - purpose
+      - region
+      - status
+      - subpurpose
       - tantalisID
+    enum: &applicationRegions
+      - CA
+      - KO
+      - LM
+      - OM
+      - PE
+      - SK
+      - SI
+      - VI
+    enum: &applicationCpStatuses
+      - NS
+      - NO
+      - CL
+      - OP
+    enum: &applicationStatuses
+      - AB
+      - AC
+      - AL
+      - CA
+      - DI
+      - DG
+      - OA
+      - ON
+      - OF
+      - SU
+      - DE
+      - UN
 
 ### Search Definitions
   crownLandsId:
@@ -219,6 +250,7 @@ definitions:
       - internal
       - _application
       - _addedBy
+
 ### Decision Definitions
   DecisionId:
     type: object
@@ -273,6 +305,7 @@ definitions:
     enum: &organizationFields
       - name
       - code
+
 ### User Definitions
   UserId:
     type: object
@@ -299,6 +332,7 @@ definitions:
       - lastName
       - username
       - roles
+
 ### Resource Definitions
   Token:
     type: object
@@ -417,12 +451,54 @@ paths:
           name: isDeleted
           type: boolean
           required: false
-          description: "Applications that are deleted or not"
+          description: "Whether to return deleted applications."
         - in: query
-          name: tantalisId
-          type: number
+          name: regions
+          description: "Regions filter."
           required: false
-          description: "Get an Application that contain this specific disposition."
+          type: array
+          collectionFormat: pipes
+          items:
+            type: string
+            enum: *applicationRegions
+        - in: query
+          name: cpStatuses
+          description: "Comment period statuses filter."
+          required: false
+          type: array
+          collectionFormat: pipes
+          items:
+            type: string
+            enum: *applicationCpStatuses
+        - in: query
+          name: statuses
+          description: "Application statuses filter."
+          required: false
+          type: array
+          collectionFormat: pipes
+          items:
+            type: string
+            enum: *applicationStatuses
+        - in: query
+          name: client
+          type: string
+          required: false
+          description: "Client filter."
+        - in: query
+          name: cl_file
+          type: string
+          required: false
+          description: "CL File # filter."
+        - in: query
+          name: tantalisID
+          type: string
+          required: false
+          description: "Tantalis ID filter."
+        - in: query
+          name: purpose
+          type: string
+          required: false
+          description: "Purpose/subpurpose filter."
       responses:
         "200":
           description: "Success"
@@ -485,7 +561,7 @@ paths:
           name: isDeleted
           type: boolean
           required: false
-          description: "Applications that are deleted or not"
+          description: "Whether to return deleted applications."
       responses:
         "200":
           description: "Success"
@@ -689,6 +765,53 @@ paths:
           items:
             type: string
             enum: *applicationFields
+        - in: query
+          name: regions
+          description: "Regions filter."
+          required: false
+          type: array
+          collectionFormat: pipes
+          items:
+            type: string
+            enum: *applicationRegions
+        - in: query
+          name: cpStatuses
+          description: "Comment period statuses filter."
+          required: false
+          type: array
+          collectionFormat: pipes
+          items:
+            type: string
+            enum: *applicationCpStatuses
+        - in: query
+          name: statuses
+          description: "Application statues filter."
+          required: false
+          type: array
+          collectionFormat: pipes
+          items:
+            type: string
+            enum: *applicationStatuses
+        - in: query
+          name: client
+          type: string
+          required: false
+          description: "Client filter."
+        - in: query
+          name: cl_file
+          type: string
+          required: false
+          description: "CL File # filter."
+        - in: query
+          name: tantalisID
+          type: string
+          required: false
+          description: "Tantalis ID filter."
+        - in: query
+          name: purpose
+          type: string
+          required: false
+          description: "Purpose/subpurpose filter."
       responses:
         "200":
           description: "Success"
