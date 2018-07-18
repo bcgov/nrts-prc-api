@@ -74,15 +74,15 @@ exports.protectedGet = function(args, res, next) {
   if (args.swagger.params.appId) {
     query = Utils.buildQuery("_id", args.swagger.params.appId.value, query);
   } else {
-    if (args.swagger.params.region && args.swagger.params.region.value !== undefined) {
-      _.assignIn(query, { region: { $in: args.swagger.params.region.value } });
+    if (args.swagger.params.regions && args.swagger.params.regions.value !== undefined) {
+      _.assignIn(query, { region: { $in: args.swagger.params.regions.value } });
     }
-    if (args.swagger.params.cp_status && args.swagger.params.cp_status.value !== undefined) {
+    if (args.swagger.params.cp_statuses && args.swagger.params.cp_statuses.value !== undefined) {
       // TODO: compute cp_status from comment periods
-      // _.assignIn(query, { cp_status: { $in: args.swagger.params.cp_status.value } });
+      // _.assignIn(query, { cp_status: { $in: args.swagger.params.cp_statuses.value } });
     }
-    if (args.swagger.params.status && args.swagger.params.status.value !== undefined) {
-      _.assignIn(query, { status: { $in: args.swagger.params.status.value } });
+    if (args.swagger.params.statuses && args.swagger.params.statuses.value !== undefined) {
+      _.assignIn(query, { status: { $in: args.swagger.params.statuses.value } });
     }
     if (args.swagger.params.client && args.swagger.params.client.value !== undefined) {
       _.assignIn(query, { client: { $regex: args.swagger.params.client.value, $options: "i" } });
