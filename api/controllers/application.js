@@ -5,12 +5,15 @@ var mongoose    = require('mongoose');
 var Actions     = require('../helpers/actions');
 var Utils       = require('../helpers/utils');
 
+const DEFAULT_PAGESIZE = 100;
+
 exports.protectedOptions = function (args, res, rest) {
   res.status(200).send();
 }
 
 exports.publicGet = function (args, res, next) {
-  var query = {};
+  let query = {};
+  let skip = null, limit = null;
 
   // Never return deleted app(s).
   _.assignIn(query, { isDeleted: false });
@@ -49,9 +52,22 @@ exports.publicGet = function (args, res, next) {
         ]
       });
     }
+
+    let pageSize = DEFAULT_PAGESIZE;
+    if (args.swagger.params.pageSize && args.swagger.params.pageSize.value !== undefined) {
+      if (args.swagger.params.pageSize.value > 0) {
+        pageSize = args.swagger.params.pageSize.value;
+      }
+    }
+    if (args.swagger.params.pageNum && args.swagger.params.pageNum.value !== undefined) {
+      if (args.swagger.params.pageNum.value >= 0) {
+          skip = (args.swagger.params.pageNum.value * pageSize);
+          limit = pageSize;
+      }
+    }
   }
 
-  getApplications(['public'], query, args.swagger.params.fields.value)
+  getApplications(['public'], query, args.swagger.params.fields.value, skip, limit)
   .then(function (data) {
     return Actions.sendResponse(res, 200, data);
   });
@@ -60,7 +76,8 @@ exports.publicGet = function (args, res, next) {
 exports.protectedGet = function(args, res, next) {
   // defaultLog.info("args.swagger.params:", args.swagger.params.auth_payload.scopes);
 
-  var query = {};
+  let query = {};
+  let skip = null, limit = null;
 
   // Unless they specifically ask for it, don't return deleted app(s).
   if (args.swagger.params.isDeleted && args.swagger.params.isDeleted.value === true) {
@@ -74,15 +91,15 @@ exports.protectedGet = function(args, res, next) {
   if (args.swagger.params.appId) {
     query = Utils.buildQuery("_id", args.swagger.params.appId.value, query);
   } else {
-    if (args.swagger.params.region && args.swagger.params.region.value !== undefined) {
-      _.assignIn(query, { region: { $in: args.swagger.params.region.value } });
+    if (args.swagger.params.regions && args.swagger.params.regions.value !== undefined) {
+      _.assignIn(query, { region: { $in: args.swagger.params.regions.value } });
     }
-    if (args.swagger.params.cp_status && args.swagger.params.cp_status.value !== undefined) {
+    if (args.swagger.params.cp_statuses && args.swagger.params.cp_statuses.value !== undefined) {
       // TODO: compute cp_status from comment periods
-      // _.assignIn(query, { cp_status: { $in: args.swagger.params.cp_status.value } });
+      // _.assignIn(query, { cp_status: { $in: args.swagger.params.cp_statuses.value } });
     }
-    if (args.swagger.params.status && args.swagger.params.status.value !== undefined) {
-      _.assignIn(query, { status: { $in: args.swagger.params.status.value } });
+    if (args.swagger.params.statuses && args.swagger.params.statuses.value !== undefined) {
+      _.assignIn(query, { status: { $in: args.swagger.params.statuses.value } });
     }
     if (args.swagger.params.client && args.swagger.params.client.value !== undefined) {
       _.assignIn(query, { client: { $regex: args.swagger.params.client.value, $options: "i" } });
@@ -103,9 +120,22 @@ exports.protectedGet = function(args, res, next) {
         ]
       });
     }
+
+    let pageSize = DEFAULT_PAGESIZE;
+    if (args.swagger.params.pageSize && args.swagger.params.pageSize.value !== undefined) {
+      if (args.swagger.params.pageSize.value > 0) {
+        pageSize = args.swagger.params.pageSize.value;
+      }
+    }
+    if (args.swagger.params.pageNum && args.swagger.params.pageNum.value !== undefined) {
+      if (args.swagger.params.pageNum.value >= 0) {
+          skip = (args.swagger.params.pageNum.value * pageSize);
+          limit = pageSize;
+      }
+    }
   }
 
-  getApplications(args.swagger.params.auth_payload.scopes, query, args.swagger.params.fields.value)
+  getApplications(args.swagger.params.auth_payload.scopes, query, args.swagger.params.fields.value, skip, limit)
   .then(function (data) {
     return Actions.sendResponse(res, 200, data);
   });
@@ -238,15 +268,15 @@ exports.protectedUnPublish = function (args, res, next) {
   });
 };
 
-var getApplications = function (role, query, fields) {
+var getApplications = function (role, query, fields, skip, limit) {
   return new Promise(function (resolve, reject) {
     var Application = mongoose.model('Application');
     var projection = {};
 
     // Fields we always return
     var defaultFields = ['_id',
-                        'code',
-                        'tags'];
+                         'code',
+                         'tags'];
     _.each(defaultFields, function (f) {
         projection[f] = 1;
     });
@@ -254,56 +284,54 @@ var getApplications = function (role, query, fields) {
     // Add requested fields - sanitize first by including only those that we can/want to return
     var sanitizedFields = _.remove(fields, function (f) {
       return (_.indexOf(['agency',
-                        'cl_file',
-                        'client',
-                        'code',
-                        'description',
-                        'internal',
-                        'internalID',
-                        'latitude',
-                        'legalDescription',
-                        'longitude',
-                        'name',
-                        'postID',
-                        'publishDate',
-                        'purpose',
-                        'region',
-                        'status',
-                        'subpurpose',
-                        'tantalisID'], f) !== -1);
+                         'cl_file',
+                         'client',
+                         'code',
+                         'description',
+                         'internal',
+                         'internalID',
+                         'latitude',
+                         'legalDescription',
+                         'longitude',
+                         'name',
+                         'postID',
+                         'publishDate',
+                         'purpose',
+                         'region',
+                         'status',
+                         'subpurpose',
+                         'tantalisID'], f) !== -1);
     });
     _.each(sanitizedFields, function (f) {
       projection[f] = 1;
     });
 
     Application.aggregate([
-      {
-        "$match": query
-      },
-      {
-        "$project": projection
-      },
+      { "$match": query },
+      { "$project": projection },
       {
         $redact: {
-         $cond: {
+          $cond: {
             if: {
               $anyElementTrue: {
-                    $map: {
-                      input: "$tags" ,
-                      as: "fieldTag",
-                      in: { $setIsSubset: [ "$$fieldTag", role ] }
-                    }
-                  }
-                },
-              then: "$$DESCEND",
-              else: "$$PRUNE"
-            }
+                $map: {
+                  input: "$tags",
+                  as: "fieldTag",
+                  in: { $setIsSubset: ["$$fieldTag", role] }
+                }
+              }
+            },
+            then: "$$DESCEND",
+            else: "$$PRUNE"
           }
         }
+      },
+      { "$skip": skip || 0 },
+      { "$limit": limit || 1000 }
     ]).exec()
-    .then(function (data) {
-      defaultLog.info("data:", data);
-      resolve(data);
-    });
+      .then(function (data) {
+        defaultLog.info("data:", data);
+        resolve(data);
+      });
   });
 };
