@@ -5,15 +5,16 @@ var mongoose    = require('mongoose');
 var Actions     = require('../helpers/actions');
 var Utils       = require('../helpers/utils');
 
-const DEFAULT_PAGESIZE = 100;
+var DEFAULT_PAGESIZE = 100;
+var MAX_LIMIT = 1000;
 
 exports.protectedOptions = function (args, res, rest) {
   res.status(200).send();
-}
+};
 
 exports.publicGet = function (args, res, next) {
-  let query = {};
-  let skip = null, limit = null;
+  var query = {};
+  var skip = null, limit = null;
 
   // Never return deleted app(s).
   _.assignIn(query, { isDeleted: false });
@@ -53,7 +54,7 @@ exports.publicGet = function (args, res, next) {
       });
     }
 
-    let pageSize = DEFAULT_PAGESIZE;
+    var pageSize = DEFAULT_PAGESIZE;
     if (args.swagger.params.pageSize && args.swagger.params.pageSize.value !== undefined) {
       if (args.swagger.params.pageSize.value > 0) {
         pageSize = args.swagger.params.pageSize.value;
@@ -76,8 +77,8 @@ exports.publicGet = function (args, res, next) {
 exports.protectedGet = function(args, res, next) {
   // defaultLog.info("args.swagger.params:", args.swagger.params.auth_payload.scopes);
 
-  let query = {};
-  let skip = null, limit = null;
+  var query = {};
+  var skip = null, limit = null;
 
   // Unless they specifically ask for it, don't return deleted app(s).
   if (args.swagger.params.isDeleted && args.swagger.params.isDeleted.value === true) {
@@ -121,7 +122,7 @@ exports.protectedGet = function(args, res, next) {
       });
     }
 
-    let pageSize = DEFAULT_PAGESIZE;
+    var pageSize = DEFAULT_PAGESIZE;
     if (args.swagger.params.pageSize && args.swagger.params.pageSize.value !== undefined) {
       if (args.swagger.params.pageSize.value > 0) {
         pageSize = args.swagger.params.pageSize.value;
@@ -214,7 +215,7 @@ exports.protectedPut = function (args, res, next) {
       return Actions.sendResponse(res, 404, {});
     }
   });
-}
+};
 
 // Publish the application.
 exports.protectedPublish = function (args, res, next) {
@@ -327,7 +328,7 @@ var getApplications = function (role, query, fields, skip, limit) {
         }
       },
       { "$skip": skip || 0 },
-      { "$limit": limit || 1000 }
+      { "$limit": limit || MAX_LIMIT }
     ]).exec()
       .then(function (data) {
         defaultLog.info("data:", data);
