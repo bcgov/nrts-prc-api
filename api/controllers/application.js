@@ -40,10 +40,12 @@ exports.publicGet = function (args, res, next) {
     if (args.swagger.params.cl_file && args.swagger.params.cl_file.value !== undefined) {
       // TODO: use $redact and then use conditional logic processing $indexOfCP
       // ref: https://stackoverflow.com/questions/2908100/mongodb-regex-search-on-integer-value
+      _.assignIn(query, { cl_file: args.swagger.params.cl_file.value }); // EXACT MATCH FOR NOW
     }
     if (args.swagger.params.tantalisID && args.swagger.params.tantalisID.value !== undefined) {
       // TODO: use $redact and then use conditional logic processing $indexOfCP
       // ref: https://stackoverflow.com/questions/2908100/mongodb-regex-search-on-integer-value
+      _.assignIn(query, { tantalisID: args.swagger.params.tantalisID.value }); // EXACT MATCH FOR NOW
     }
     if (args.swagger.params.purpose && args.swagger.params.purpose.value !== undefined) {
       _.assignIn(query, {
@@ -62,19 +64,19 @@ exports.publicGet = function (args, res, next) {
     }
     if (args.swagger.params.pageNum && args.swagger.params.pageNum.value !== undefined) {
       if (args.swagger.params.pageNum.value >= 0) {
-          skip = (args.swagger.params.pageNum.value * pageSize);
-          limit = pageSize;
+        skip = (args.swagger.params.pageNum.value * pageSize);
+        limit = pageSize;
       }
     }
   }
 
   getApplications(['public'], query, args.swagger.params.fields.value, skip, limit)
-  .then(function (data) {
-    return Actions.sendResponse(res, 200, data);
-  });
+    .then(function (data) {
+      return Actions.sendResponse(res, 200, data);
+    });
 };
 
-exports.protectedGet = function(args, res, next) {
+exports.protectedGet = function (args, res, next) {
   // defaultLog.info("args.swagger.params:", args.swagger.params.auth_payload.scopes);
 
   var query = {};
@@ -108,10 +110,12 @@ exports.protectedGet = function(args, res, next) {
     if (args.swagger.params.cl_file && args.swagger.params.cl_file.value !== undefined) {
       // TODO: use $redact and then use conditional logic processing $indexOfCP
       // ref: https://stackoverflow.com/questions/2908100/mongodb-regex-search-on-integer-value
+      _.assignIn(query, { cl_file: args.swagger.params.cl_file.value }); // EXACT MATCH FOR NOW
     }
     if (args.swagger.params.tantalisID && args.swagger.params.tantalisID.value !== undefined) {
       // TODO: use $redact and then use conditional logic processing $indexOfCP
       // ref: https://stackoverflow.com/questions/2908100/mongodb-regex-search-on-integer-value
+      _.assignIn(query, { tantalisID: args.swagger.params.tantalisID.value }); // EXACT MATCH FOR NOW
     }
     if (args.swagger.params.purpose && args.swagger.params.purpose.value !== undefined) {
       _.assignIn(query, {
@@ -130,16 +134,16 @@ exports.protectedGet = function(args, res, next) {
     }
     if (args.swagger.params.pageNum && args.swagger.params.pageNum.value !== undefined) {
       if (args.swagger.params.pageNum.value >= 0) {
-          skip = (args.swagger.params.pageNum.value * pageSize);
-          limit = pageSize;
+        skip = (args.swagger.params.pageNum.value * pageSize);
+        limit = pageSize;
       }
     }
   }
 
   getApplications(args.swagger.params.auth_payload.scopes, query, args.swagger.params.fields.value, skip, limit)
-  .then(function (data) {
-    return Actions.sendResponse(res, 200, data);
-  });
+    .then(function (data) {
+      return Actions.sendResponse(res, 200, data);
+    });
 };
 
 exports.protectedDelete = function (args, res, next) {
@@ -147,19 +151,19 @@ exports.protectedDelete = function (args, res, next) {
   defaultLog.info("Delete Application:", appId);
 
   var Application = mongoose.model('Application');
-  Application.findOne({_id: appId}, function (err, o) {
+  Application.findOne({ _id: appId }, function (err, o) {
     if (o) {
       defaultLog.info("o:", o);
 
       // Set the deleted flag.
       Actions.delete(o)
-      .then(function (deleted) {
-        // Deleted successfully
-        return Actions.sendResponse(res, 200, deleted);
-      }, function (err) {
-        // Error
-        return Actions.sendResponse(res, 400, err);
-      });
+        .then(function (deleted) {
+          // Deleted successfully
+          return Actions.sendResponse(res, 200, deleted);
+        }, function (err) {
+          // Error
+          return Actions.sendResponse(res, 400, err);
+        });
     } else {
       defaultLog.info("Couldn't find that object!");
       return Actions.sendResponse(res, 404, {});
@@ -179,10 +183,10 @@ exports.protectedPost = function (args, res, next) {
   app.internal.tags = [['sysadmin']];
   app._addedBy = args.swagger.params.auth_payload.userID;
   app.save()
-  .then(function (a) {
-    // defaultLog.info("Saved new application object:", a);
-    return Actions.sendResponse(res, 200, a);
-  });
+    .then(function (a) {
+      // defaultLog.info("Saved new application object:", a);
+      return Actions.sendResponse(res, 200, a);
+    });
 };
 
 // Update an existing application.
@@ -206,7 +210,7 @@ exports.protectedPut = function (args, res, next) {
   }
 
   var Application = require('mongoose').model('Application');
-  Application.findOneAndUpdate({_id: objId}, obj, {upsert:false, new: true}, function (err, o) {
+  Application.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function (err, o) {
     if (o) {
       defaultLog.info("o:", o);
       return Actions.sendResponse(res, 200, o);
@@ -223,19 +227,19 @@ exports.protectedPublish = function (args, res, next) {
   defaultLog.info("Publish Application:", objId);
 
   var Application = require('mongoose').model('Application');
-  Application.findOne({_id: objId}, function (err, o) {
+  Application.findOne({ _id: objId }, function (err, o) {
     if (o) {
       defaultLog.info("o:", o);
 
       // Add public to the tag of this obj.
       Actions.publish(o)
-      .then(function (published) {
-        // Published successfully
-        return Actions.sendResponse(res, 200, published);
-      }, function (err) {
-        // Error
-        return Actions.sendResponse(res, err.code, err);
-      });
+        .then(function (published) {
+          // Published successfully
+          return Actions.sendResponse(res, 200, published);
+        }, function (err) {
+          // Error
+          return Actions.sendResponse(res, err.code, err);
+        });
     } else {
       defaultLog.info("Couldn't find that object!");
       return Actions.sendResponse(res, 404, {});
@@ -249,19 +253,19 @@ exports.protectedUnPublish = function (args, res, next) {
   defaultLog.info("UnPublish Application:", objId);
 
   var Application = require('mongoose').model('Application');
-  Application.findOne({_id: objId}, function (err, o) {
+  Application.findOne({ _id: objId }, function (err, o) {
     if (o) {
       defaultLog.info("o:", o);
 
       // Remove public to the tag of this obj.
       Actions.unPublish(o)
-      .then(function (unpublished) {
-        // UnPublished successfully
-        return Actions.sendResponse(res, 200, unpublished);
-      }, function (err) {
-        // Error
-        return Actions.sendResponse(res, err.code, err);
-      });
+        .then(function (unpublished) {
+          // UnPublished successfully
+          return Actions.sendResponse(res, 200, unpublished);
+        }, function (err) {
+          // Error
+          return Actions.sendResponse(res, err.code, err);
+        });
     } else {
       defaultLog.info("Couldn't find that object!");
       return Actions.sendResponse(res, 404, {});
@@ -276,32 +280,32 @@ var getApplications = function (role, query, fields, skip, limit) {
 
     // Fields we always return
     var defaultFields = ['_id',
-                         'code',
-                         'tags'];
+      'code',
+      'tags'];
     _.each(defaultFields, function (f) {
-        projection[f] = 1;
+      projection[f] = 1;
     });
 
     // Add requested fields - sanitize first by including only those that we can/want to return
     var sanitizedFields = _.remove(fields, function (f) {
       return (_.indexOf(['agency',
-                         'cl_file',
-                         'client',
-                         'code',
-                         'description',
-                         'internal',
-                         'internalID',
-                         'latitude',
-                         'legalDescription',
-                         'longitude',
-                         'name',
-                         'postID',
-                         'publishDate',
-                         'purpose',
-                         'region',
-                         'status',
-                         'subpurpose',
-                         'tantalisID'], f) !== -1);
+        'cl_file',
+        'client',
+        'code',
+        'description',
+        'internal',
+        'internalID',
+        'latitude',
+        'legalDescription',
+        'longitude',
+        'name',
+        'postID',
+        'publishDate',
+        'purpose',
+        'region',
+        'status',
+        'subpurpose',
+        'tantalisID'], f) !== -1);
     });
     _.each(sanitizedFields, function (f) {
       projection[f] = 1;
