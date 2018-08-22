@@ -84,12 +84,19 @@ exports.publicGetBCGW = function (args, res, next) {
             return current.then (function () {
                 // console.log ('+++++++++', code.SID);
                 var Application = require('mongoose').model('Application');
-                return Application.findOne({tantalisID: code.SID}, function (err, o) {
-                if (o) {
-                  obj.sidsFound.push(code.SID);
-                } else {
-                  console.log("Nothing found");
-                }
+                return new Promise(function (complete, fail) {
+                  Application.findOne({tantalisID: code.SID}, function (err, o) {
+                  if (err) {
+                    fail();
+                  }
+                  if (o) {
+                    console.log("Found sid:", code.SID);
+                    obj.sidsFound.push(code.SID);
+                  } else {
+                    console.log("Nothing found");
+                  }
+                  complete();
+                });
               });
             });
           }, Promise.resolve())
