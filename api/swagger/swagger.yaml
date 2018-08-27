@@ -99,29 +99,21 @@ definitions:
     example: name|type
     #TODO: Fix enums
     enum: &applicationFields
-      - name
-      - type
-      - subtype
-      - purpose
-      - subpurpose
-      - _proponent
-      - latitude
-      - longitude
-      - areaHectares
-      - location
-      - region
-      - description
-      - legalDescription
-      - status
-      - publishDate
-      - businessUnit
+      - agency
       - cl_file
-      - commodityType
-      - commodity
-      - commodities
+      - client
+      - description
+      - internal
+      - internalID
+      - latitude
+      - legalDescription
+      - longitude
+      - name
+      - postID
+      - publishDate
       - tantalisID
 
-### Application Definitions
+### Feature Definitions
   FeatureId:
     type: object
     properties:
