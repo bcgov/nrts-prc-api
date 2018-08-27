@@ -11,7 +11,8 @@ var passport      = require("passport");
 var auth          = require("./api/helpers/auth");
 var models        = require("./api/helpers/models");
 var swaggerConfig = YAML.load("./api/swagger/swagger.yaml");
-var winston        = require('winston');
+var winston       = require('winston');
+var bodyParser    = require('body-parser');
 
 var dbConnection  = 'mongodb://'
                     + (process.env.MONGODB_SERVICE_HOST || process.env.DB_1_PORT_27017_TCP_ADDR || 'localhost')
@@ -31,6 +32,10 @@ winston.loggers.add('default', {
     }
 });
 var defaultLog = winston.loggers.get('default');
+
+// Increase postbody sizing
+app.use(bodyParser.json({limit: '10mb', extended: true}))
+app.use(bodyParser.urlencoded({limit: '10mb', extended: true}));
 
 // Enable CORS
 app.use(function (req, res, next) {
@@ -97,6 +102,7 @@ swaggerTools.initializeMiddleware(swaggerConfig, function(middleware) {
       defaultLog.info("loading db models.");
       require('./api/helpers/models/user');
       require('./api/helpers/models/application');
+      require('./api/helpers/models/feature');
       require('./api/helpers/models/document');
       require('./api/helpers/models/comment');
       require('./api/helpers/models/commentperiod');
