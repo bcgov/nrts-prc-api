@@ -35,6 +35,12 @@ exports.publicGet = function (args, res, next) {
         limit = pageSize;
       }
     }
+    if (args.swagger.params.tantalisId && args.swagger.params.tantalisId.value !== undefined) {
+      _.assignIn(query, { tantalisID: args.swagger.params.tantalisId.value });
+    }
+    if (args.swagger.params.cl_file && args.swagger.params.cl_file.value !== undefined) {
+      _.assignIn(query, { cl_file: args.swagger.params.cl_file.value });
+    }
   }
   _.assignIn(query, { isDeleted: false });
 
@@ -74,6 +80,9 @@ exports.protectedGet = function(args, res, next) {
   }
   if (args.swagger.params.tantalisId && args.swagger.params.tantalisId.value !== undefined) {
     _.assignIn(query, { tantalisID: args.swagger.params.tantalisId.value });
+  }
+  if (args.swagger.params.cl_file && args.swagger.params.cl_file.value !== undefined) {
+    _.assignIn(query, { cl_file: args.swagger.params.cl_file.value });
   }
   // Unless they specifically ask for it, hide deleted results.
   if (args.swagger.params.isDeleted && args.swagger.params.isDeleted.value !== undefined) {

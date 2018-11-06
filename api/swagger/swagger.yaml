@@ -492,6 +492,11 @@ paths:
           type: number
           required: false
           description: "Get an Application that contain this specific disposition."
+        - in: query
+          name: cl_file
+          type: number
+          required: false
+          description: "Get an Application that relates to this crown lands file."
       responses:
         "200":
           description: "Success"
@@ -768,6 +773,16 @@ paths:
           type: number
           required: false
           description: "Number of results per page."
+        - in: query
+          name: tantalisId
+          type: number
+          required: false
+          description: "Get an Application that contain this specific disposition."
+        - in: query
+          name: cl_file
+          type: number
+          required: false
+          description: "Get an Application that relates to this crown lands file."
       responses:
         "200":
           description: "Success"
