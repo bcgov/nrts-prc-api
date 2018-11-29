@@ -579,10 +579,12 @@ var addStandardQueryFilters = function (query, args) {
     _.assignIn(query, { cl_file: args.swagger.params.cl_file.value });
   }
   if (args.swagger.params.purpose && args.swagger.params.purpose.value !== undefined) {
-    _.assignIn(query, { purpose: args.swagger.params.purpose.value });
+    var queryString = qs.parse(args.swagger.params.purpose.value);
+    _.assignIn(query, { purpose: { $in: queryString.eq } });
   }
   if (args.swagger.params.subpurpose && args.swagger.params.subpurpose.value !== undefined) {
-    _.assignIn(query, { subpurpose: args.swagger.params.subpurpose.value });
+    var queryString = qs.parse(args.swagger.params.purpose.value);
+    _.assignIn(query, { subpurpose: { $in: queryString.eq } });
   }
   if (args.swagger.params.type && args.swagger.params.type.value !== undefined) {
     _.assignIn(query, { type: args.swagger.params.type.value });
