@@ -276,7 +276,9 @@ exports.getApplicationByDispositionID = function (accessToken, disp) {
                         application.DISPOSITION_TRANSACTION_SID     = disp;
                         application.parcels                         = [];
                         application.interestedParties               = [];
-                        application.statusHistoryEffectiveDate      = (obj.statusHistory[0] != null) ? obj.statusHistory[0].effectiveDate : null;
+                        application.statusHistoryEffectiveDate      = (obj.statusHistory[0] != null) ?
+                                                                      obj.statusHistory[0].effectiveDate : // Unix Epoch Time (milliseconds)
+                                                                      null;
 
                         // WKT conversion to GEOJSON
                         for (let geo of obj.interestParcels) {
