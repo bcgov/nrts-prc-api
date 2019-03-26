@@ -218,6 +218,10 @@ exports.getApplicationByFilenumber = function(accessToken, clFile) {
       function(err, res, body) {
         if (err || (res && res.statusCode !== 200)) {
           defaultLog.error('TTLS API ResponseCode:', err == null ? res.statusCode : err);
+          if (!err && res && res.statusCode) {
+            err = {};
+            err.statusCode = res.statusCode;
+          }
           reject(err);
         } else {
           try {
