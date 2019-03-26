@@ -10,7 +10,7 @@ exports.publish = function(o) {
 
     // Object was already published?
     if (exists) {
-      defaultLog.info('HTTP 409, Object already published:', exists);
+      defaultLog.info(`HTTP 409, Object already published: ${exists}`);
       reject({
         code: 409,
         message: 'Object already published'
@@ -38,7 +38,7 @@ exports.unPublish = function(o) {
     });
     // Object wasn't already published?
     if (exists.length === 0) {
-      defaultLog.info('HTTP 409, Object already unpublished:', exists);
+      defaultLog.info(`HTTP 409, Object already unpublished: ${exists}`);
       reject({
         code: 409,
         message: 'Object already unpublished'

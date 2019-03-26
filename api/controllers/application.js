@@ -84,7 +84,7 @@ exports.publicHead = function(args, res, next) {
           }
         })
         .catch(function(err) {
-          defaultLog.error('Error in runDataQuery:', err);
+          defaultLog.error(`Error in runDataQuery: ${err}`);
           return Actions.sendResponse(res, 400, err);
         });
     },
@@ -141,7 +141,7 @@ exports.publicGet = function(args, res, next) {
           return Actions.sendResponse(res, 200, data);
         })
         .catch(function(err) {
-          defaultLog.error('Error in runDataQuery:', err);
+          defaultLog.error(`Error in runDataQuery: ${err}`);
           return Actions.sendResponse(res, 400, err);
         });
     },
@@ -155,7 +155,7 @@ exports.protectedGet = function(args, res, next) {
   var skip = null;
   var limit = null;
 
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   // Build match query if on appId route
   var query = {};
@@ -196,13 +196,13 @@ exports.protectedGet = function(args, res, next) {
       return Actions.sendResponse(res, 200, data);
     })
     .catch(function(err) {
-      defaultLog.error('Error in runDataQuery:', err);
+      defaultLog.error(`Error in runDataQuery: ${err}`);
       return Actions.sendResponse(res, 400, err);
     });
 };
 
 exports.protectedHead = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   // Build match query if on appId route
   var query = {};
@@ -249,19 +249,19 @@ exports.protectedHead = function(args, res, next) {
       }
     })
     .catch(function(err) {
-      defaultLog.error('Error in runDataQuery:', err);
+      defaultLog.error(`Error in runDataQuery: ${err}`);
       return Actions.sendResponse(res, 400, err);
     });
 };
 
 exports.protectedDelete = function(args, res, next) {
   var appId = args.swagger.params.appId.value;
-  defaultLog.info('Delete Application:', appId);
+  defaultLog.info(`Delete Application: ${appId}`);
 
   var Application = mongoose.model('Application');
   Application.findOne({ _id: appId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Set the deleted flag.
       Actions.delete(o).then(
@@ -355,7 +355,7 @@ exports.protectedPost = function(args, res, next) {
   delete obj.cl_file;
   delete obj.client;
 
-  defaultLog.info('Incoming new object:', obj);
+  defaultLog.info(`Incoming new object: ${obj}`);
 
   var Application = mongoose.model('Application');
   var app = new Application(obj);
@@ -367,7 +367,7 @@ exports.protectedPost = function(args, res, next) {
     return new Promise(function(resolve, reject) {
       return Utils.loginWebADE()
         .then(function(accessToken) {
-          defaultLog.debug('TTLS API Logged in:', accessToken);
+          defaultLog.debug(`TTLS API Logged in: ${accessToken}`);
           // Disp lookup
           return Utils.getApplicationByDispositionID(accessToken, savedApp.tantalisID);
         })
@@ -419,7 +419,7 @@ exports.protectedPost = function(args, res, next) {
           });
       })
       .catch(function(err) {
-        defaultLog.error('Error in API:', err);
+        defaultLog.error(`Error in API: ${err}`);
         return Actions.sendResponse(res, 400, err);
       });
   });
@@ -428,18 +428,18 @@ exports.protectedPost = function(args, res, next) {
 // Update an existing application
 exports.protectedPut = function(args, res, next) {
   var objId = args.swagger.params.appId.value;
-  defaultLog.info('ObjectID:', args.swagger.params.appId.value);
+  defaultLog.info(`ObjectID: ${args.swagger.params.appId.value}`);
 
   var obj = args.swagger.params.AppObject.value;
   // Strip security tags - these will not be updated on this route.
   delete obj.tags;
-  defaultLog.info('Incoming updated object:', obj);
+  defaultLog.info(`Incoming updated object: ${obj}`);
   // TODO sanitize/update audits.
 
   var Application = require('mongoose').model('Application');
   Application.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
       return Actions.sendResponse(res, 200, o);
     } else {
       defaultLog.info("Couldn't find that object!");
@@ -451,12 +451,12 @@ exports.protectedPut = function(args, res, next) {
 // Publish/Unpublish the application
 exports.protectedPublish = function(args, res, next) {
   var objId = args.swagger.params.appId.value;
-  defaultLog.info('Publish Application:', objId);
+  defaultLog.info(`Publish Application: ${objId}`);
 
   var Application = require('mongoose').model('Application');
   Application.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Go through the feature collection and publish the corresponding features.
       doFeaturePubUnPub('publish', objId)
@@ -482,12 +482,12 @@ exports.protectedPublish = function(args, res, next) {
 };
 exports.protectedUnPublish = function(args, res, next) {
   var objId = args.swagger.params.appId.value;
-  defaultLog.info('UnPublish Application:', objId);
+  defaultLog.info(`UnPublish Application: ${objId}`);
 
   var Application = require('mongoose').model('Application');
   Application.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Go through the feature collection and publish the corresponding features.
       doFeaturePubUnPub('unpublish', objId)
@@ -708,7 +708,7 @@ var addStandardQueryFilters = function(query, args) {
     }
   }
   if (args.swagger.params.centroid && args.swagger.params.centroid.value !== undefined) {
-    // defaultLog.info("Looking up features based on coords:", args.swagger.params.centroid.value);
+    // defaultLog.info(`Looking up features based on coords: ${args.swagger.params.centroid.value}`);
     // Throws if parsing fails.
     let coordinates = JSON.parse(args.swagger.params.centroid.value)[0];
     // restrict lat and lng to valid bounds

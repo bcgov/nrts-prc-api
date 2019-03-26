@@ -93,13 +93,13 @@ exports.unProtectedPost = function(args, res, next) {
           // Update who did this?  TODO: Public
           // doc._addedBy = args.swagger.params.auth_payload.preferred_username;
           doc.save().then(function(d) {
-            defaultLog.info('Saved new document object:', d._id);
+            defaultLog.info(`Saved new document object: ${d._id}`);
             return Actions.sendResponse(res, 200, d);
           });
         }
       });
   } catch (e) {
-    defaultLog.info('Error:', e);
+    defaultLog.info(`Error: ${e}`);
     // Delete the path details before we return to the caller.
     delete e['path'];
     return Actions.sendResponse(res, 400, e);
@@ -107,7 +107,7 @@ exports.unProtectedPost = function(args, res, next) {
 };
 
 exports.protectedHead = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   // Build match query if on docId route
   var query = {};
@@ -153,7 +153,7 @@ exports.protectedHead = function(args, res, next) {
 };
 
 exports.protectedGet = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   // Build match query if on docId route
   var query = {};
@@ -229,7 +229,7 @@ exports.publicDownload = function(args, res, next) {
 };
 
 exports.protectedDownload = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   // Build match query if on docId route
   var query = {};
@@ -307,13 +307,13 @@ exports.protectedPost = function(args, res, next) {
           // Update who did this?
           doc._addedBy = args.swagger.params.auth_payload.preferred_username;
           doc.save().then(function(d) {
-            defaultLog.info('Saved new document object:', d._id);
+            defaultLog.info(`Saved new document object: ${d._id}`);
             return Actions.sendResponse(res, 200, d);
           });
         }
       });
   } catch (e) {
-    defaultLog.info('Error:', e);
+    defaultLog.info(`Error: ${e}`);
     // Delete the path details before we return to the caller.
     delete e['path'];
     return Actions.sendResponse(res, 400, e);
@@ -322,12 +322,12 @@ exports.protectedPost = function(args, res, next) {
 
 exports.protectedDelete = function(args, res, next) {
   var objId = args.swagger.params.docId.value;
-  defaultLog.info('Delete Document:', objId);
+  defaultLog.info(`Delete Document: ${objId}`);
 
   var Document = require('mongoose').model('Document');
   Document.findOne({ _id: objId, isDeleted: false }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Set the deleted flag.
       Actions.delete(o).then(
@@ -349,12 +349,12 @@ exports.protectedDelete = function(args, res, next) {
 
 exports.protectedPublish = function(args, res, next) {
   var objId = args.swagger.params.docId.value;
-  defaultLog.info('Publish Document:', objId);
+  defaultLog.info(`Publish Document: ${objId}`);
 
   var Document = require('mongoose').model('Document');
   Document.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Add public to the tag of this obj.
       Actions.publish(o).then(
@@ -375,12 +375,12 @@ exports.protectedPublish = function(args, res, next) {
 };
 exports.protectedUnPublish = function(args, res, next) {
   var objId = args.swagger.params.docId.value;
-  defaultLog.info('UnPublish Document:', objId);
+  defaultLog.info(`UnPublish Document: ${objId}`);
 
   var Document = require('mongoose').model('Document');
   Document.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Remove public to the tag of this obj.
       Actions.unPublish(o).then(
@@ -402,13 +402,13 @@ exports.protectedUnPublish = function(args, res, next) {
 
 // Update an existing document
 exports.protectedPut = function(args, res, next) {
-  // defaultLog.info("upfile:", args.swagger.params.upfile);
+  // defaultLog.info(`upfile: ${args.swagger.params.upfile}`);
   var objId = args.swagger.params.docId.value;
   var _application = args.swagger.params._application.value;
   var _comment = args.swagger.params._comment.value;
   var _decision = args.swagger.params._decision.value;
   var displayName = args.swagger.params.displayName.value;
-  defaultLog.info('ObjectID:', args.swagger.params.docId.value);
+  defaultLog.info(`ObjectID: ${args.swagger.params.docId.value}`);
 
   var guid = intformat(generator.next(), 'dec');
   var ext = mime.extension(args.swagger.params.upfile.value.mimetype);
@@ -430,7 +430,7 @@ exports.protectedPut = function(args, res, next) {
           var obj = args.swagger.params;
           // Strip security tags - these will not be updated on this route.
           delete obj.tags;
-          defaultLog.info('Incoming updated object:', obj._id);
+          defaultLog.info(`Incoming updated object: ${obj._id}`);
           // Update file location
           obj.internalURL = uploadDir + guid + '.' + ext;
           // Update who did this?
@@ -443,7 +443,7 @@ exports.protectedPut = function(args, res, next) {
           var Document = require('mongoose').model('Document');
           Document.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function(err, o) {
             if (o) {
-              // defaultLog.info("o:", o);
+              // defaultLog.info(`o: ${o}`);
               return Actions.sendResponse(res, 200, o);
             } else {
               defaultLog.info("Couldn't find that object!");
@@ -453,7 +453,7 @@ exports.protectedPut = function(args, res, next) {
         }
       });
   } catch (e) {
-    defaultLog.info('Error:', e);
+    defaultLog.info(`Error: ${e}`);
     // Delete the path details before we return to the caller.
     delete e['path'];
     return Actions.sendResponse(res, 400, e);

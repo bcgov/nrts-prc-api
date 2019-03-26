@@ -207,7 +207,7 @@ exports.loginWebADE = function() {
 // Tantalis API
 exports.getApplicationByFilenumber = function(accessToken, clFile) {
   return new Promise(function(resolve, reject) {
-    defaultLog.info('Looking up file:', _tantalisAPI + 'landUseApplications?fileNumber=' + clFile);
+    defaultLog.info(`Looking up file: ${_tantalisAPI + 'landUseApplications?fileNumber=' + clFile}`);
     request.get(
       {
         url: _tantalisAPI + 'landUseApplications?fileNumber=' + clFile,
@@ -217,7 +217,7 @@ exports.getApplicationByFilenumber = function(accessToken, clFile) {
       },
       function(err, res, body) {
         if (err || (res && res.statusCode !== 200)) {
-          defaultLog.error('TTLS API ResponseCode:', err == null ? res.statusCode : err);
+          defaultLog.error(`TTLS API ResponseCode: ${err == null ? res.statusCode : err}`);
           if (!err && res && res.statusCode) {
             err = {};
             err.statusCode = res.statusCode;
@@ -226,12 +226,12 @@ exports.getApplicationByFilenumber = function(accessToken, clFile) {
         } else {
           try {
             var obj = JSON.parse(body);
-            // defaultLog.info("obj:", obj);
+            // defaultLog.info(`obj: ${obj}`);
             var applications = [];
             if (obj && obj.elements && obj.elements.length > 0) {
-              // defaultLog.info("obj.elements:", obj.elements);
+              // defaultLog.info(`obj.elements: ${obj.elements}`);
               for (let app of obj.elements) {
-                // defaultLog.info("app:", app);
+                // defaultLog.info(`app: ${app}`);
                 var application = {};
                 application.TENURE_PURPOSE = app.purposeCode['description'];
                 application.TENURE_SUBPURPOSE = app.purposeCode.subPurposeCodes[0]['description'];
@@ -250,7 +250,7 @@ exports.getApplicationByFilenumber = function(accessToken, clFile) {
             }
             resolve(applications);
           } catch (e) {
-            defaultLog.error('Object Parsing Failed:', e);
+            defaultLog.error(`Object Parsing Failed: ${e}`);
             reject(e);
           }
         }
@@ -261,7 +261,7 @@ exports.getApplicationByFilenumber = function(accessToken, clFile) {
 
 exports.getApplicationByDispositionID = function(accessToken, disp) {
   return new Promise(function(resolve, reject) {
-    defaultLog.info('Looking up disposition:', _tantalisAPI + 'landUseApplications/' + disp);
+    defaultLog.info(`Looking up disposition: ${_tantalisAPI + 'landUseApplications/' + disp}`);
     request.get(
       {
         url: _tantalisAPI + 'landUseApplications/' + disp,
@@ -271,7 +271,7 @@ exports.getApplicationByDispositionID = function(accessToken, disp) {
       },
       function(err, res, body) {
         if (err || (res && res.statusCode !== 200)) {
-          defaultLog.error('TTLS API ResponseCode:', err == null ? res.statusCode : err);
+          defaultLog.error(`TTLS API ResponseCode: ${err == null ? res.statusCode : err}`);
           if (!err && res && res.statusCode) {
             err = {};
             err.statusCode = res.statusCode;
@@ -377,7 +377,7 @@ exports.getApplicationByDispositionID = function(accessToken, disp) {
               resolve(null);
             }
           } catch (e) {
-            defaultLog.error('Object Parsing Failed:', e);
+            defaultLog.error(`Object Parsing Failed: ${e}`);
             reject(e);
           }
         }
@@ -397,7 +397,7 @@ exports.getAllApplicationIDs = function(accessToken, filterParams = {}) {
   return new Promise(function(resolve, reject) {
     const queryString = `?${qs.stringify(filterParams)}`;
 
-    defaultLog.info('Looking up all applications:', _tantalisAPI + 'landUseApplications' + queryString);
+    defaultLog.info(`Looking up all applications: ${_tantalisAPI + 'landUseApplications' + queryString}`);
 
     request.get(
       {
@@ -408,8 +408,8 @@ exports.getAllApplicationIDs = function(accessToken, filterParams = {}) {
       },
       function(err, res, body) {
         if (err || (res && res.statusCode !== 200)) {
-          defaultLog.error('TTLS API ResponseCode:', err == null ? res.statusCode : err);
-          defaultLog.error('TTLS API ResponseCode:', body);
+          defaultLog.error(`TTLS API ResponseCode: ${err == null ? res.statusCode : err}`);
+          defaultLog.error(`TTLS API ResponseCode: ${body}`);
           if (!err && res && res.statusCode) {
             err = {};
             err.statusCode = res.statusCode;
@@ -432,7 +432,7 @@ exports.getAllApplicationIDs = function(accessToken, filterParams = {}) {
               resolve([]);
             }
           } catch (e) {
-            defaultLog.error('Object Parsing Failed:', e);
+            defaultLog.error(`Object Parsing Failed: ${e}`);
             reject(e);
           }
         }

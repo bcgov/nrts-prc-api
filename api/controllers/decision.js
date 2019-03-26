@@ -42,7 +42,7 @@ exports.publicGet = function(args, res, next) {
 };
 
 exports.protectedHead = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   // Build match query if on decisionId route
   var query = {};
@@ -82,7 +82,7 @@ exports.protectedHead = function(args, res, next) {
 };
 
 exports.protectedGet = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   // Build match query if on decisionId route
   var query = {};
@@ -118,14 +118,14 @@ exports.protectedGet = function(args, res, next) {
 //  Create a new decision
 exports.protectedPost = function(args, res, next) {
   var obj = args.swagger.params.decision.value;
-  defaultLog.info('Incoming new object:', obj);
+  defaultLog.info(`Incoming new object: ${obj}`);
 
   var Decision = mongoose.model('Decision');
   var decision = new Decision(obj);
   // Define security tag defaults
   decision.tags = [['sysadmin']];
   decision.save().then(function(a) {
-    defaultLog.info('Saved new decision object:', a);
+    defaultLog.info(`Saved new decision object: ${a}`);
     return Actions.sendResponse(res, 200, a);
   });
 };
@@ -133,17 +133,17 @@ exports.protectedPost = function(args, res, next) {
 // Update an existing decision
 exports.protectedPut = function(args, res, next) {
   var objId = args.swagger.params.decisionId.value;
-  defaultLog.info('ObjectID:', args.swagger.params.decisionId.value);
+  defaultLog.info(`ObjectID: ${args.swagger.params.decisionId.value}`);
 
   var obj = args.swagger.params.decision.value;
   // Strip security tags - these will not be updated on this route.
   delete obj.tags;
-  defaultLog.info('Incoming updated object:', obj);
+  defaultLog.info(`Incoming updated object: ${obj}`);
 
   var Decision = require('mongoose').model('Decision');
   Decision.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
       return Actions.sendResponse(res, 200, o);
     } else {
       defaultLog.info("Couldn't find that object!");
@@ -154,12 +154,12 @@ exports.protectedPut = function(args, res, next) {
 //  Delete a Decision
 exports.protectedDelete = function(args, res, next) {
   var objId = args.swagger.params.decisionId.value;
-  defaultLog.info('Delete Decision:', objId);
+  defaultLog.info(`Delete Decision: ${objId}`);
 
   var decision = require('mongoose').model('Decision');
   decision.findOne({ _id: objId, isDeleted: false }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Set the deleted flag.
       Actions.delete(o).then(
@@ -182,12 +182,12 @@ exports.protectedDelete = function(args, res, next) {
 // Publish/Unpublish the Decision
 exports.protectedPublish = function(args, res, next) {
   var objId = args.swagger.params.decisionId.value;
-  defaultLog.info('Publish Decision:', objId);
+  defaultLog.info(`Publish Decision: ${objId}`);
 
   var decision = require('mongoose').model('Decision');
   decision.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Add public to the tag of this obj.
       Actions.publish(o).then(
@@ -208,12 +208,12 @@ exports.protectedPublish = function(args, res, next) {
 };
 exports.protectedUnPublish = function(args, res, next) {
   var objId = args.swagger.params.decisionId.value;
-  defaultLog.info('UnPublish Decision:', objId);
+  defaultLog.info(`UnPublish Decision: ${objId}`);
 
   var decision = require('mongoose').model('Decision');
   decision.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Remove public to the tag of this obj.
       Actions.unPublish(o).then(

@@ -15,7 +15,7 @@ exports.publicGet = function(args, res, next) {
     query = Utils.buildQuery('_id', args.swagger.params.featureId.value, query);
   } else {
     if (args.swagger.params.coordinates && args.swagger.params.coordinates.value !== undefined) {
-      defaultLog.info('Looking up features based on coords:', args.swagger.params.coordinates.value);
+      defaultLog.info(`Looking up features based on coords: ${args.swagger.params.coordinates.value}`);
       try {
         query = {
           geometry: {
@@ -25,7 +25,7 @@ exports.publicGet = function(args, res, next) {
           }
         };
       } catch (err) {
-        defaultLog.info('Parsing Error:', err);
+        defaultLog.info(`Parsing Error: ${err}`);
         return Actions.sendResponse(res, 400, err);
       }
     }
@@ -43,7 +43,7 @@ exports.publicGet = function(args, res, next) {
   });
 };
 exports.protectedGet = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   var query = {};
   // Build match query if on featureId route
@@ -51,7 +51,7 @@ exports.protectedGet = function(args, res, next) {
     query = Utils.buildQuery('_id', args.swagger.params.featureId.value, query);
   } else {
     if (args.swagger.params.coordinates && args.swagger.params.coordinates.value !== undefined) {
-      defaultLog.info('Looking up features based on coords:', args.swagger.params.coordinates.value);
+      defaultLog.info(`Looking up features based on coords: ${args.swagger.params.coordinates.value}`);
       try {
         query = {
           geometry: {
@@ -61,7 +61,7 @@ exports.protectedGet = function(args, res, next) {
           }
         };
       } catch (err) {
-        defaultLog.info('Parsing Error:', err);
+        defaultLog.info(`Parsing Error: ${err}`);
         return Actions.sendResponse(res, 400, err);
       }
     }
@@ -88,7 +88,7 @@ exports.protectedGet = function(args, res, next) {
 
 exports.protectedDelete = function(args, res, next) {
   defaultLog.info('Deleting a Feature(s)');
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   var Feature = mongoose.model('Feature');
   var query = {};
@@ -117,14 +117,14 @@ exports.protectedDelete = function(args, res, next) {
 //  Create a new Feature
 exports.protectedPost = function(args, res, next) {
   var obj = args.swagger.params.feature.value;
-  defaultLog.info('Incoming new object:', obj);
+  defaultLog.info(`Incoming new object: ${obj}`);
 
   var Feature = mongoose.model('Feature');
   var feature = new Feature(obj);
   // Define security tag defaults.  Default public and sysadmin.
   feature.tags = [['sysadmin'], ['public']];
   feature.save().then(function(a) {
-    // defaultLog.info("Saved new Feature object:", a);
+    // defaultLog.info(`Saved new Feature object: ${a}`);
     return Actions.sendResponse(res, 200, a);
   });
 };
@@ -132,18 +132,18 @@ exports.protectedPost = function(args, res, next) {
 // Update an existing Feature
 exports.protectedPut = function(args, res, next) {
   var objId = args.swagger.params.featureId.value;
-  defaultLog.info('ObjectID:', args.swagger.params.featureId.value);
+  defaultLog.info(`ObjectID: ${args.swagger.params.featureId.value}`);
 
   var obj = args.swagger.params.FeatureObject.value;
   // Strip security tags - these will not be updated on this route.
   delete obj.tags;
-  defaultLog.info('Incoming updated object:', obj);
+  defaultLog.info(`Incoming updated object: ${obj}`);
   // TODO sanitize/update audits.
 
   var Feature = require('mongoose').model('Feature');
   Feature.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
       return Actions.sendResponse(res, 200, o);
     } else {
       defaultLog.info("Couldn't find that object!");
@@ -155,12 +155,12 @@ exports.protectedPut = function(args, res, next) {
 // Publish/Unpublish the Feature
 exports.protectedPublish = function(args, res, next) {
   var objId = args.swagger.params.featureId.value;
-  defaultLog.info('Publish Feature:', objId);
+  defaultLog.info(`Publish Feature: ${objId}`);
 
   var Feature = require('mongoose').model('Feature');
   Feature.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Add public to the tag of this obj.
       Actions.publish(o).then(
@@ -181,12 +181,12 @@ exports.protectedPublish = function(args, res, next) {
 };
 exports.protectedUnPublish = function(args, res, next) {
   var objId = args.swagger.params.featureId.value;
-  defaultLog.info('UnPublish Feature:', objId);
+  defaultLog.info(`UnPublish Feature: ${objId}`);
 
   var Feature = require('mongoose').model('Feature');
   Feature.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Remove public to the tag of this obj.
       Actions.unPublish(o).then(

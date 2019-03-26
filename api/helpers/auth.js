@@ -12,7 +12,7 @@ var KEYCLOAK_ENABLED = process.env.KEYCLOAK_ENABLED || 'true';
 var defaultLog = require('winston').loggers.get('default');
 
 exports.verifyToken = function(req, authOrSecDef, token, callback) {
-  defaultLog.info('verifying token', token);
+  defaultLog.info(`verifying token ${token}`);
   // scopes/roles defined for the current endpoint
   var currentScopes = req.swagger.operation['x-security-scopes'];
   function sendError() {
@@ -37,7 +37,7 @@ exports.verifyToken = function(req, authOrSecDef, token, callback) {
 
       client.getSigningKey(kid, (err, key) => {
         if (err) {
-          defaultLog.error('Signing Key Error:', err);
+          defaultLog.error(`Signing Key Error: ${err}`);
           callback(sendError());
         } else {
           const signingKey = key.publicKey || key.rsaPublicKey;
@@ -46,7 +46,7 @@ exports.verifyToken = function(req, authOrSecDef, token, callback) {
         }
       });
     } else {
-      defaultLog.info('proceeding with local JWT verification:', tokenString);
+      defaultLog.info(`proceeding with local JWT verification: ${tokenString}`);
       _verifySecret(currentScopes, tokenString, SECRET, req, callback, sendError);
     }
   } else {
@@ -57,24 +57,24 @@ exports.verifyToken = function(req, authOrSecDef, token, callback) {
 
 function _verifySecret(currentScopes, tokenString, secret, req, callback, sendError) {
   jwt.verify(tokenString, secret, function(verificationError, decodedToken) {
-    // defaultLog.info("verificationError:", verificationError);
-    // defaultLog.info("decodedToken:", decodedToken);
+    // defaultLog.info(`verificationError: ${verificationError}`);
+    // defaultLog.info(`decodedToken: ${decodedToken}`);
 
     // check if the JWT was verified correctly
     if (verificationError == null && Array.isArray(currentScopes) && decodedToken && decodedToken.realm_access.roles) {
-      defaultLog.info('JWT decoded:', decodedToken);
+      defaultLog.info(`JWT decoded: ${decodedToken}`);
 
       // check if the role is valid for this endpoint
       var roleMatch = currentScopes.some(r => decodedToken.realm_access.roles.indexOf(r) >= 0);
-      defaultLog.info('currentScopes', currentScopes);
-      defaultLog.info('decodedToken.realm_access.roles', decodedToken.realm_access.roles);
-      defaultLog.info('role match', roleMatch);
+      defaultLog.info(`currentScopes ${currentScopes}`);
+      defaultLog.info(`decodedToken.realm_access.roles ${decodedToken.realm_access.roles}`);
+      defaultLog.info(`role match ${roleMatch}`);
 
       // check if the dissuer matches
       var issuerMatch = decodedToken.iss == ISSUER;
-      defaultLog.info('decodedToken.iss', decodedToken.iss);
-      defaultLog.info('ISSUER', ISSUER);
-      defaultLog.info('issuerMatch', issuerMatch);
+      defaultLog.info(`decodedToken.iss ${decodedToken.iss}`);
+      defaultLog.info(`ISSUER ${ISSUER}`);
+      defaultLog.info(`issuerMatch ${issuerMatch}`);
 
       if (roleMatch && issuerMatch) {
         // add the token to the request so that we can access it in the endpoint code if necessary
@@ -87,23 +87,23 @@ function _verifySecret(currentScopes, tokenString, secret, req, callback, sendEr
       }
     } else {
       // return the error in the callback if the JWT was not verified
-      defaultLog.info('JWT Verification Err:', verificationError);
+      defaultLog.info(`JWT Verification Err: ${verificationError}`);
       return callback(sendError());
     }
   });
 }
 
 exports.issueToken = function(user, deviceId, scopes) {
-  defaultLog.info('user:', user);
-  defaultLog.info('deviceId:', deviceId);
-  defaultLog.info('scopes:', scopes);
+  defaultLog.info(`user: ${user}`);
+  defaultLog.info(`deviceId: ${deviceId}`);
+  defaultLog.info(`scopes: ${scopes}`);
   var crypto = require('crypto');
   var randomString = crypto.randomBytes(32).toString('hex');
   var jti = crypto
     .createHash('sha256')
     .update(user.username + deviceId + randomString)
     .digest('hex');
-  defaultLog.info('JTI:', jti);
+  defaultLog.info(`JTI: ${jti}`);
 
   var payload = {
     name: user.username,
@@ -118,7 +118,7 @@ exports.issueToken = function(user, deviceId, scopes) {
   };
 
   var token = jwt.sign(payload, SECRET, { expiresIn: JWT_SIGN_EXPIRY + 'm' });
-  defaultLog.info('ISSUING NEW TOKEN:expiresIn:', JWT_SIGN_EXPIRY + 'm');
+  defaultLog.info(`ISSUING NEW TOKEN:expiresIn: ${JWT_SIGN_EXPIRY + 'm'}`);
 
   return token;
 };
@@ -142,8 +142,8 @@ exports.setPassword = function(user) {
  * Create instance method for authenticating user
  */
 var authenticate = function(user, password) {
-  defaultLog.info('HASH:', hashPassword(user, password));
-  defaultLog.info('user.password:', user.password);
+  defaultLog.info(`HASH: ${hashPassword(user, password)}`);
+  defaultLog.info(`user.password: ${user.password}`);
   return user.password === hashPassword(user, password);
 };
 
@@ -158,7 +158,7 @@ exports.checkAuthentication = function(username, password, cb) {
     },
     function(err, user) {
       if (err) {
-        defaultLog.info('ERR:', err);
+        defaultLog.info(`ERR: ${err}`);
         return cb(err);
       }
       defaultLog.info('continuing');

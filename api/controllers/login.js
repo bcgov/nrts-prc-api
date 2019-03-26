@@ -10,11 +10,11 @@ exports.loginPost = function(args, res, next) {
 
   auth.checkAuthentication(username, password, function(err, user, message) {
     if (err || !user) {
-      defaultLog.info('err:', err);
-      defaultLog.info('user:', user);
+      defaultLog.info(`err: ${err}`);
+      defaultLog.info(`user: ${user}`);
       res.status(400).send(err);
     } else {
-      defaultLog.info('Logged in:', user._id);
+      defaultLog.info(`Logged in: ${user._id}`);
       // Remove sensitive data before login
       user.password = undefined;
       user.salt = undefined;

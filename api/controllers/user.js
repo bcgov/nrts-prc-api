@@ -10,7 +10,7 @@ exports.protectedOptions = function(args, res, rest) {
 };
 
 exports.protectedGet = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   // Build match query if on userId route
   var query = {};
@@ -26,7 +26,7 @@ exports.protectedGet = function(args, res, next) {
 //  Create a new user
 exports.protectedPost = function(args, res, next) {
   var obj = args.swagger.params.user.value;
-  defaultLog.info('Incoming new object:', obj);
+  defaultLog.info(`Incoming new object: ${obj}`);
 
   var User = mongoose.model('User');
   var user = new User(obj);
@@ -37,7 +37,7 @@ exports.protectedPost = function(args, res, next) {
   // Define security tag defaults - users not public by default.
   user.tags = [['sysadmin']];
   user.save().then(function(a) {
-    defaultLog.info('Saved new user object:', a);
+    defaultLog.info(`Saved new user object: ${a}`);
     return Actions.sendResponse(res, 200, a);
   });
 };
@@ -45,7 +45,7 @@ exports.protectedPost = function(args, res, next) {
 // Update an existing user
 exports.protectedPut = function(args, res, next) {
   var objId = args.swagger.params.userId.value;
-  defaultLog.info('ObjectID:', args.swagger.params.userId.value);
+  defaultLog.info(`ObjectID: ${args.swagger.params.userId.value}`);
 
   this.scopes = args.swagger.operation['x-security-scopes'];
 
@@ -53,7 +53,7 @@ exports.protectedPut = function(args, res, next) {
   // NB: Don't strip security tags on protectedPut.  Only sysadmins
   // Can call this route.
   // delete obj.tags;
-  defaultLog.info('Incoming updated object:', obj);
+  defaultLog.info(`Incoming updated object: ${obj}`);
 
   // TODO Temporary: Only let the 'admin' account change usernames and passwords.
   // Additionally, don't let them update their username.
@@ -85,7 +85,7 @@ exports.protectedPut = function(args, res, next) {
   var User = require('mongoose').model('User');
   User.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
       return Actions.sendResponse(res, 200, o);
     } else {
       defaultLog.info("Couldn't find that object!");
@@ -124,7 +124,7 @@ var getUsers = function(role, query, fields) {
     ])
       .exec()
       .then(function(data) {
-        defaultLog.info('data:', data);
+        defaultLog.info(`data: ${data}`);
         resolve(data);
       });
   });

@@ -103,7 +103,7 @@ exports.publicGet = function(args, res, next) {
 };
 
 exports.protectedHead = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info(`args.swagger.params: ${args.swagger.operation['x-security-scopes']}`);
 
   // Build match query if on CommentPeriodId route
   var query = {};
@@ -204,7 +204,7 @@ exports.protectedGet = function(args, res, next) {
 //  Create a new Comment
 exports.unProtectedPost = function(args, res, next) {
   var obj = args.swagger.params.comment.value;
-  defaultLog.info('Incoming new object:', obj);
+  defaultLog.info(`Incoming new object: ${obj}`);
 
   var Comment = mongoose.model('Comment');
   var comment = new Comment(obj);
@@ -231,7 +231,7 @@ exports.unProtectedPost = function(args, res, next) {
   // comment._addedBy = args.swagger.params.auth_payload.preferred_username;
 
   comment.save().then(function(c) {
-    // defaultLog.info("Saved new Comment object:", c);
+    // defaultLog.info(`Saved new Comment object: ${c}`);
     return Actions.sendResponse(res, 200, c);
   });
 };
@@ -239,7 +239,7 @@ exports.unProtectedPost = function(args, res, next) {
 // Update an existing Comment
 exports.protectedPut = function(args, res, next) {
   var objId = args.swagger.params.CommentId.value;
-  defaultLog.info('ObjectID:', args.swagger.params.CommentId.value);
+  defaultLog.info(`ObjectID: ${args.swagger.params.CommentId.value}`);
 
   var obj = args.swagger.params.comment.value;
 
@@ -272,13 +272,13 @@ exports.protectedPut = function(args, res, next) {
     }
   }
 
-  defaultLog.info('Incoming updated object:', obj);
+  defaultLog.info(`Incoming updated object: ${obj}`);
   // TODO sanitize/update audits.
 
   var Comment = require('mongoose').model('Comment');
   Comment.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
       return Actions.sendResponse(res, 200, o);
     } else {
       defaultLog.info("Couldn't find that object!");
@@ -290,12 +290,12 @@ exports.protectedPut = function(args, res, next) {
 // Publish the Comment
 exports.protectedPublish = function(args, res, next) {
   var objId = args.swagger.params.CommentId.value;
-  defaultLog.info('Publish Comment:', objId);
+  defaultLog.info(`Publish Comment: ${objId}`);
 
   var Comment = require('mongoose').model('Comment');
   Comment.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Add public to the tag of this obj.
       Actions.publish(o).then(
@@ -318,12 +318,12 @@ exports.protectedPublish = function(args, res, next) {
 // Unpublish the Comment
 exports.protectedUnPublish = function(args, res, next) {
   var objId = args.swagger.params.CommentId.value;
-  defaultLog.info('UnPublish Comment:', objId);
+  defaultLog.info(`UnPublish Comment: ${objId}`);
 
   var Comment = require('mongoose').model('Comment');
   Comment.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.info(`o: ${o}`);
 
       // Remove public to the tag of this obj.
       Actions.unPublish(o).then(

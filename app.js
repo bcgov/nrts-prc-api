@@ -80,7 +80,7 @@ swaggerTools.initializeMiddleware(swaggerConfig, function(middleware) {
     }
   } catch (e) {
     // Fall through - uploads will continue to fail until this is resolved locally.
-    defaultLog.info("Couldn't create upload folder:", e);
+    defaultLog.info(`Couldn't create upload folder: ${e}`);
   }
   // Load up DB
   var options = {
@@ -96,7 +96,7 @@ swaggerTools.initializeMiddleware(swaggerConfig, function(middleware) {
     useNewUrlParser: true,
     useCreateIndex: true
   };
-  defaultLog.info('Connecting to:', dbConnection);
+  defaultLog.info(`Connecting to: ${dbConnection}`);
   mongoose.Promise = global.Promise;
   mongoose.connect(encodeURI(dbConnection), options).then(
     () => {
@@ -119,7 +119,7 @@ swaggerTools.initializeMiddleware(swaggerConfig, function(middleware) {
       });
     },
     err => {
-      defaultLog.info('err:', err);
+      defaultLog.info(`err: ${err}`);
       return;
     }
   );
