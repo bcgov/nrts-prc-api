@@ -197,7 +197,7 @@ exports.protectedPublish = function(args, res, next) {
         },
         function(err) {
           // Error
-          return Actions.sendResponse(res, err.code, err);
+          return Actions.sendResponse(res, null, err);
         }
       );
     } else {
@@ -223,7 +223,7 @@ exports.protectedUnPublish = function(args, res, next) {
         },
         function(err) {
           // Error
-          return Actions.sendResponse(res, err.code, err);
+          return Actions.sendResponse(res, null, err);
         }
       );
     } else {

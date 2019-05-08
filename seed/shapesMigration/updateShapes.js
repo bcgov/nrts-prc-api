@@ -3,14 +3,21 @@
  *
  * 1. Authenticates with ACRFD
  * 2. Unpublishes retired applications:
- *    a. Fetches all ACRFD applications that may have reached a retired state, and unpublishes any found.
+ *    a. Fetches all ACRFD applications that have reached a retired state (assumes 6 months is the retirement period), and unpublishes any found.
  * 3. AUthenticates with Tantalis
  * 4. Updates non-deleted ACRFD applications:
- *    a. Fetches all Tantalis applications that have had an update within the last 1 day.
+ *    a. Fetches all Tantalis applications that have had an update within the last 1 week.
  *    b. Fetches all non-deleted ACRFD tantalisIDs.
  *    c. For each ACRFD application with a matching Tantalis application:
  *      i. Updates the ACRFD application features and meta to match whatever is in Tantalis (the source of truth).
  */
+
+// winston logger needs to be created before any local classes (that use the logger) are loaded.
+const winston = require('winston');
+const defaultLog = winston.loggers.add('default', {
+  transports: [new winston.transports.Console()]
+});
+
 var Promise = require('es6-promise').Promise;
 var _ = require('lodash');
 var request = require('request');
@@ -30,13 +37,13 @@ var auth_endpoint = 'http://localhost:3000/api/login/token';
 var _accessToken = '';
 
 var args = process.argv.slice(2);
-console.log('=======================================================');
+defaultLog.info('=======================================================');
 if (args.length !== 8) {
-  console.log(
+  defaultLog.info(
     'Please specify proper parameters: <username> <password> <protocol> <host> <port> <client_id> <grant_type> <auth_endpoint>'
   );
-  console.log('Example: node updateShapes.js admin admin http localhost 3000 client_id grant_type auth_endpoint');
-  console.log('=======================================================');
+  defaultLog.info('Example: node updateShapes.js admin admin http localhost 3000 client_id grant_type auth_endpoint');
+  defaultLog.info('=======================================================');
   process.exit(1);
   return;
 } else {
@@ -49,8 +56,8 @@ if (args.length !== 8) {
   grant_type = args[6];
   auth_endpoint = args[7];
   uri = protocol + '://' + host + ':' + port + '/';
-  console.log('Using connection:', uri);
-  console.log('-----------------------------------------------');
+  defaultLog.info('Using connection:', uri);
+  defaultLog.info('-----------------------------------------------');
 }
 
 // Used when unpublishing retired applications.
@@ -104,7 +111,7 @@ var loginToACRFD = function(username, password) {
       },
       function(err, res, body) {
         if (err || res.statusCode !== 200) {
-          console.log(' - Login err:', err, res);
+          defaultLog.info(' - Login err:', err, res);
           reject(null);
         } else {
           var data = JSON.parse(body);
@@ -140,10 +147,10 @@ var getApplicationByID = function(route, tantalisID) {
       },
       function(err, res, body) {
         if (err) {
-          console.log(' - getApplication err:', err);
+          defaultLog.info(' - getApplication err:', err);
           reject(err);
         } else if (res.statusCode !== 200) {
-          console.log('res.statusCode:', res.statusCode);
+          defaultLog.info('res.statusCode:', res.statusCode);
           reject(res.statusCode + ' ' + body);
         } else {
           var obj = {};
@@ -151,7 +158,7 @@ var getApplicationByID = function(route, tantalisID) {
             obj = JSON.parse(body);
             resolve(obj);
           } catch (e) {
-            console.log(' - getApplication parse err:', e);
+            defaultLog.info(' - getApplication parse err:', e);
           }
         }
       }
@@ -177,7 +184,7 @@ var deleteAllApplicationFeatures = function(acrfdApp) {
       },
       function(err, res, body) {
         if (err || res.statusCode !== 200) {
-          console.log(' - deleteAllApplicationFeatures err:', err, res.body);
+          defaultLog.info(' - deleteAllApplicationFeatures err:', err, res.body);
           reject(null);
         } else {
           var data = JSON.parse(body);
@@ -198,7 +205,7 @@ var renewJWTLogin = function() {
     var duration = moment.duration(moment().diff(jwt_login_time)).asSeconds();
     // if less than 60 seconds left before token expiry.
     if (duration > jwt_expiry - 60) {
-      console.log(' - Requesting new ACRFD login token.');
+      defaultLog.info(' - Requesting new ACRFD login token.');
       return loginToACRFD(username, password).then(function() {
         resolve();
       });
@@ -217,7 +224,7 @@ var renewJWTLogin = function() {
  */
 var updateFeatures = function(acrfdApp, tantalisApp) {
   return new Promise(function(resolve, reject) {
-    // console.log("returning:", tantalisApp);
+    // defaultLog.info("returning:", tantalisApp);
     // Store the features in the DB
     var allFeaturesForDisp = [];
     acrfdApp.areaHectares = tantalisApp.areaHectares;
@@ -296,7 +303,7 @@ var saveFeatures = function(feature, acrfdAppId) {
       },
       function(err, res, body) {
         if (err || res.statusCode !== 200) {
-          console.log(' - doFeatureSave err:', err, res);
+          defaultLog.info(' - doFeatureSave err:', err, res);
           reject(null);
         } else {
           var data = JSON.parse(body);
@@ -342,7 +349,7 @@ var updateApplicationMeta = function(acrfdApp, tantalisApp) {
       },
       function(err, res, body) {
         if (err || res.statusCode !== 200) {
-          console.log(' - updateApplicationMeta err:', err, res);
+          defaultLog.info(' - updateApplicationMeta err:', err, res);
           reject(null);
         } else {
           var data = JSON.parse(body);
@@ -368,22 +375,22 @@ var updateApplication = function(applicationIDToUpdate) {
       // Only expecting 1 result, but the API returns an array
       return applicationsToUpdate.reduce(function(previousApp, currentApp) {
         return previousApp.then(function() {
-          console.log('-----------------------------------------------');
-          console.log(`6. Updating ACRFD Application, tantalisID: ${currentApp.tantalisID}`);
-          console.log(' - Fetching Tantalis application');
+          defaultLog.info('-----------------------------------------------');
+          defaultLog.info(`6. Updating ACRFD Application, tantalisID: ${currentApp.tantalisID}`);
+          defaultLog.info(' - Fetching Tantalis application');
           return Utils.getApplicationByDispositionID(_accessToken, currentApp.tantalisID).then(function(tantalisApp) {
             if (!tantalisApp) {
-              console.log(' - No Tantalis application found - not updating.');
+              defaultLog.info(' - No Tantalis application found - not updating.');
               return Promise.resolve();
             }
-            console.log(' - Deleting existing application features');
+            defaultLog.info(' - Deleting existing application features');
             return deleteAllApplicationFeatures(currentApp)
               .then(function() {
-                console.log(' - Updating new application features');
+                defaultLog.info(' - Updating new application features');
                 return updateFeatures(currentApp, tantalisApp);
               })
               .then(function(updatedApp) {
-                console.log(' - Updating new application meta');
+                defaultLog.info(' - Updating new application meta');
                 return updateApplicationMeta(updatedApp, tantalisApp);
               });
           });
@@ -393,16 +400,16 @@ var updateApplication = function(applicationIDToUpdate) {
 };
 
 /**
- * Fetches all ACRFD applications that have a retired status AND a statusHistoryEffectiveDate within the past week 6 months ago.
+ * Fetches all ACRFD applications that have a retired status AND a statusHistoryEffectiveDate within the past 2 weeks 6 months ago.
  *
  * @returns {Promise} promise that resolves with the list of retired applications.
  */
 var getApplicationsToUnpublish = function() {
-  console.log(' - fetching retired applications.');
+  defaultLog.info(' - fetching retired applications.');
   return new Promise(function(resolve, reject) {
     var sinceDate = moment()
       .subtract(6, 'months')
-      .subtract(1, 'week');
+      .subtract(2, 'weeks');
     var untilDate = moment().subtract(6, 'months');
 
     // get all applications that are in a retired status, and that have a last status update date within in the past week 6 months ago.
@@ -419,7 +426,7 @@ var getApplicationsToUnpublish = function() {
       },
       function(err, res, body) {
         if (err || res.statusCode !== 200) {
-          console.log(' - getApplicationsToUnpublish err:', err, res);
+          defaultLog.info(' - getApplicationsToUnpublish err:', err, res);
           reject(null);
         } else {
           var data = JSON.parse(body);
@@ -456,10 +463,10 @@ var unpublishApplications = function(applicationsToUnpublish) {
           },
           function(err, res, body) {
             if (err || res.statusCode !== 200) {
-              console.log(' - unpublishApplications err:', err, body);
+              defaultLog.info(' - unpublishApplications err:', err, body);
               reject(null);
             } else {
-              console.log(` - Unpublished application, _id: ${currentApp._id}`);
+              defaultLog.info(` - Unpublished application, _id: ${currentApp._id}`);
               var data = JSON.parse(body);
               resolve(data);
             }
@@ -489,10 +496,10 @@ var getAllApplicationIDs = function() {
       },
       function(err, res, body) {
         if (err) {
-          console.log(' - getAllApplicationIDs err:', err);
+          defaultLog.info(' - getAllApplicationIDs err:', err);
           reject(err);
         } else if (res.statusCode !== 200) {
-          console.log('res.statusCode:', res.statusCode);
+          defaultLog.info('res.statusCode:', res.statusCode);
           reject(res.statusCode + ' ' + body);
         } else {
           var obj = {};
@@ -500,7 +507,7 @@ var getAllApplicationIDs = function() {
             obj = JSON.parse(body);
             resolve(obj);
           } catch (e) {
-            console.log(' - getAllApplicationIDs parse err:', e);
+            defaultLog.info(' - getAllApplicationIDs parse err:', e);
           }
         }
       }
@@ -511,36 +518,36 @@ var getAllApplicationIDs = function() {
 /**
  *  Main call chain that utilizes the above functions to update ACRFD applications.
  */
-console.log('1. Authenticating with ACRFD.');
+defaultLog.info('1. Authenticating with ACRFD.');
 loginToACRFD(username, password)
   .then(function() {
-    console.log('-----------------------------------------------');
-    console.log('2. Unpublishing retired applications.');
+    defaultLog.info('-----------------------------------------------');
+    defaultLog.info('2. Unpublishing retired applications.');
     return getApplicationsToUnpublish().then(function(applicationsToUnpublish) {
-      console.log(` - found ${applicationsToUnpublish.length} retired applications.`);
+      defaultLog.info(` - found ${applicationsToUnpublish.length} retired applications.`);
       return unpublishApplications(applicationsToUnpublish);
     });
   })
   .then(function() {
-    console.log('-----------------------------------------------');
-    console.log('3. Authenticating with Tantalis.');
+    defaultLog.info('-----------------------------------------------');
+    defaultLog.info('3. Authenticating with Tantalis.');
     return Utils.loginWebADE().then(function(accessToken) {
-      console.log(' - TTLS API login token:', accessToken);
+      defaultLog.info(' - TTLS API login token:', accessToken);
       _accessToken = accessToken;
       return _accessToken;
     });
   })
   .then(function() {
-    console.log('-----------------------------------------------');
-    console.log('4. Fetching all Tantalis applications that have been updated in the last day.');
-    var lastDay = moment()
-      .subtract(1, 'days')
+    defaultLog.info('-----------------------------------------------');
+    defaultLog.info('4. Fetching all Tantalis applications that have been updated in the last week.');
+    var lastWeek = moment()
+      .subtract(1, 'week')
       .format('YYYYMMDD');
-    return Utils.getAllApplicationIDs(_accessToken, { updated: lastDay });
+    return Utils.getAllApplicationIDs(_accessToken, { updated: lastWeek });
   })
   .then(function(recentlyUpdatedApplicationIDs) {
-    console.log('-----------------------------------------------');
-    console.log(
+    defaultLog.info('-----------------------------------------------');
+    defaultLog.info(
       '5. Fetching all non-deleted ACRFD applications and cross referencing with recently updated Tantalis applications.'
     );
     return getAllApplicationIDs().then(function(allACRFDApplicationIDs) {
@@ -550,7 +557,7 @@ loginToACRFD(username, password)
     });
   })
   .then(function(applicationIDsToUpdate) {
-    console.log(
+    defaultLog.info(
       ` - Found ${
         applicationIDsToUpdate.length
       } ACRFD Applications with matching recently updated Tantalis application.`
@@ -564,13 +571,13 @@ loginToACRFD(username, password)
     }, Promise.resolve());
   })
   .then(function() {
-    console.log('-----------------------------------------------');
-    console.log('Done!');
-    console.log('=======================================================');
+    defaultLog.info('-----------------------------------------------');
+    defaultLog.info('Done!');
+    defaultLog.info('=======================================================');
   })
   .catch(function(err) {
-    console.log('-----------------------------------------------');
-    console.log(' - General err:', err);
-    console.log('=======================================================');
+    defaultLog.info('-----------------------------------------------');
+    defaultLog.info(' - General err:', err);
+    defaultLog.info('=======================================================');
     process.exit(1);
   });

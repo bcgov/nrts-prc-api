@@ -183,7 +183,7 @@ exports.loginWebADE = function() {
       {
         url: webADEAPI + 'oauth/token?grant_type=client_credentials&disableDeveloperFilter=true',
         headers: {
-          Authorization: 'Basic ' + new Buffer(username + ':' + password).toString('base64')
+          Authorization: 'Basic ' + Buffer.from(username + ':' + password).toString('base64')
         }
       },
       function(err, res, body) {
@@ -198,6 +198,7 @@ exports.loginWebADE = function() {
               reject();
             }
           } catch (e) {
+            defaultLog.error('loginWebADE Error:', e);
             reject(e);
           }
         }
@@ -218,13 +219,12 @@ exports.getApplicationByFilenumber = function(accessToken, clFile) {
         }
       },
       function(err, res, body) {
-        if (err || (res && res.statusCode !== 200)) {
-          defaultLog.error('TTLS API ResponseCode:', err == null ? res.statusCode : err);
-          if (!err && res && res.statusCode) {
-            err = {};
-            err.statusCode = res.statusCode;
-          }
+        if (err) {
+          defaultLog.error('TTLS API Error:', err);
           reject(err);
+        } else if (res && res.statusCode !== 200) {
+          defaultLog.info('TTLS API ResponseCode:', res.statusCode);
+          reject({ code: (res && res.statusCode) || null });
         } else {
           try {
             var obj = JSON.parse(body);
@@ -279,13 +279,12 @@ exports.getApplicationByDispositionID = function(accessToken, disp) {
         }
       },
       function(err, res, body) {
-        if (err || (res && res.statusCode !== 200)) {
-          defaultLog.error('TTLS API ResponseCode:', err == null ? res.statusCode : err);
-          if (!err && res && res.statusCode) {
-            err = {};
-            err.statusCode = res.statusCode;
-          }
+        if (err) {
+          defaultLog.error('TTLS API Error:', err);
           reject(err);
+        } else if (res && res.statusCode !== 200) {
+          defaultLog.info('TTLS API ResponseCode:', res.statusCode);
+          reject({ code: (res && res.statusCode) || null });
         } else {
           try {
             var obj = JSON.parse(body);
@@ -463,30 +462,29 @@ exports.getAllApplicationIDs = function(accessToken, filterParams = {}) {
         }
       },
       function(err, res, body) {
-        if (err || (res && res.statusCode !== 200)) {
-          defaultLog.error('TTLS API ResponseCode:', err == null ? res.statusCode : err);
-          defaultLog.error('TTLS API ResponseCode:', body);
-          if (!err && res && res.statusCode) {
-            err = {};
-            err.statusCode = res.statusCode;
-          }
+        if (err) {
+          defaultLog.error('TTLS API Error:', err);
           reject(err);
+        } else if (res && res.statusCode !== 200) {
+          defaultLog.info('TTLS API ResponseCode:', res.statusCode);
+          reject({ code: (res && res.statusCode) || null });
         } else {
           try {
-            var applicationIDs = [];
-
             var response = JSON.parse(body);
+
+            var applicationIDs = [];
             _.forEach(response.elements, function(obj) {
               if (obj) {
                 applicationIDs.push(obj.landUseApplicationId);
               }
             });
-            if (applicationIDs.length) {
-              resolve(applicationIDs);
-            } else {
+
+            if (!applicationIDs.length) {
               defaultLog.info('No applications found.');
               resolve([]);
             }
+
+            resolve(applicationIDs);
           } catch (e) {
             defaultLog.error('Object Parsing Failed:', e);
             reject(e);
