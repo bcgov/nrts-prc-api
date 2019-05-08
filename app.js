@@ -9,11 +9,18 @@ var YAML = require('yamljs');
 var swaggerConfig = YAML.load('./api/swagger/swagger.yaml');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
+const moment = require('moment');
 
-// winston logger needs to be created before any local classes (that use the logger) are loaded.
+// winston logger needs to be created before any local classes that use the logger are loaded.
 const winston = require('winston');
 const defaultLog = winston.loggers.add('default', {
-  transports: [new winston.transports.Console({ level: 'silly', handleExceptions: true })]
+  transports: [
+    new winston.transports.Console({
+      formatter: info => {
+        return `${moment().format('DD-MM-YYYY HH:mm:ss')} ${info.level}: ${info.message}`;
+      }
+    })
+  ]
 });
 
 var auth = require('./api/helpers/auth');

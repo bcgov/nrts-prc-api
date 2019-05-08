@@ -49,8 +49,6 @@ Linting and formatting is handled by a combiation of `TSlint` and `Prettier`.  T
 
 These 2 linters (tslint, Prettier) do have overlapping rules.  To avoid weird rule interactions, TSlint has been configured to defer any overlapping rules to Prettier, via the use of `tslint-config-prettier` in `tslint.json`.
 
-Recommend installing the [VSCode Prettier extension](https://github.com/prettier/prettier-vscode), so Prettier's formatting can be applied on-the-fly.
-
 ### Technolgies used
 
 [TSLint](https://palantir.github.io/tslint/), [Prettier](https://prettier.io/), [Stylelint](https://stylelint.io/), [husky](https://www.npmjs.com/package/husky), [lint-staged](https://github.com/okonet/lint-staged)
@@ -87,14 +85,6 @@ _Note: Not all linting/formatting errors can be automatically fixed, and will re
 npm run lint-fix
 ```
 
-# Testing
-
-## Info
-
-### Technolgies used
-
-[Jasmine](https://jasmine.github.io/), [Karma](https://karma-runner.github.io/latest/index.html), [Protractor](http://www.protractortest.org/)
-
 # API Specification
 
 The API is defined in `swagger.yaml`.
@@ -105,7 +95,15 @@ This project uses npm package `swagger-tools` via `./app.js` to automatically ge
 
 Recommend reviewing the [Open API Specification](https://swagger.io/docs/specification/about/) before making any changes to the `swagger.yaml` file.
 
-# Initial Setup
+# Testing
+
+## Info
+
+### Technolgies used
+
+[Jasmine](https://jasmine.github.io/), [Karma](https://karma-runner.github.io/latest/index.html), [Protractor](http://www.protractortest.org/)
+
+## Initial Setup
 
 1) Start server and create database by running `npm start` in root
 
@@ -117,7 +115,7 @@ Recommend reviewing the [Open API Specification](https://swagger.io/docs/specifi
 
 3) Seed local database as described in [seed README](seed/README.md)
 
-# Testing
+## API Testing
 
 This project is using [jest](http://jestjs.io/) as a testing framework. You can run tests with
 `yarn test` or `jest`. Running either command with the `--watch` flag will re-run the tests every time a file is changed.
@@ -170,12 +168,12 @@ This code will stand in for the swagger-tools router, and help build the objects
 Unfortunately, this results in a lot of boilerplate code in each of the controller tests. There are some helpers to reduce the amount you need to write, but you will still need to check the parameter field names sent by your middleware router match what the controller(and swagger router) expect. However, this method results in  pretty effective integration tests as they exercise the controller code and save objects in the database.
 
 
-## Test Database
+### Test Database
 The tests run on an in-memory MongoDB server, using the [mongodb-memory-server](https://github.com/nodkz/mongodb-memory-server) package. The setup can be viewed at [test_helper.js](api/test/test_helper.js), and additional config in [config/mongoose_options.js]. It is currently configured to wipe out the database after each test run to prevent database pollution.
 
 [Factory-Girl](https://github.com/aexmachina/factory-girl) is used to easily create models(persisted to db) for testing purposes.
 
-## Mocking http requests
+### Mocking http requests
 External http calls (such as GETs to BCGW) are mocked with a tool called [nock](https://github.com/nock/nock). Currently sample JSON responses are stored in the [test/fixtures](test/fixtures) directory. This allows you to intercept a call to an external service such as bcgw, and respond with your own sample data.
 
 ```javascript
@@ -201,32 +199,7 @@ External http calls (such as GETs to BCGW) are mocked with a tool called [nock](
       });
   });
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Running locally with Keycloak
+### Running locally with Keycloak
 
 This project uses [Keycloak](https://www.keycloak.org/) to handle authentication and manage user roles.
 
@@ -246,3 +219,36 @@ case 'http://localhost:4200':
   this.keycloakEnabled = true;
   break;
 ```
+
+# VSCode Extensions
+
+A list of recommended/helpful VS Code extensions.
+
+## Linting/Formatting
+
+* TSLint
+* ESLint
+* Prettier - Code formatter
+* stylelint
+* EditorConfig for VS Code
+
+## Languages
+
+* npm
+* Angular Extension pack
+  * This may include 'Beautify' which should be disabled as we are using Prettier.
+* JavaScript (ES6) code snippets
+
+## General
+
+* Auto Comment Blocks
+* Auto-Open Markdown Preview
+* autoDocstring
+* Document This
+* Better Comments
+* Bracket Pair Colorizer
+* Code Spell Checker
+* Declarative Jenkinsfile Support
+* Path intellisense
+* SCSS intellisense
+* Shell launcher
