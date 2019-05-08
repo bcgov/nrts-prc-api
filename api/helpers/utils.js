@@ -7,7 +7,9 @@ var qs = require('qs');
 var request = require('request');
 var turf = require('@turf/turf');
 var helpers = require('@turf/helpers');
-var Wkt = require('wicket');
+var Wkx = require('wkx');
+const epsg = require('epsg');
+const reproject = require('reproject');
 const defaultLog = require('winston').loggers.get('default');
 var _serviceHost = process.env.CLAMAV_SERVICE_HOST || '127.0.0.1';
 var _servicePort = process.env.CLAMAV_SERVICE_PORT || '3310';
@@ -259,6 +261,13 @@ exports.getApplicationByFilenumber = function(accessToken, clFile) {
   });
 };
 
+/**
+ * Fetches an application by its disposition ID.
+ *
+ * @param {string} accessToken tantalis bearer token
+ * @param {string} disp disposition ID
+ * @returns {Promise} promise that resolves with a single application
+ */
 exports.getApplicationByDispositionID = function(accessToken, disp) {
   return new Promise(function(resolve, reject) {
     defaultLog.info('Looking up disposition:', _tantalisAPI + 'landUseApplications/' + disp);
@@ -302,18 +311,7 @@ exports.getApplicationByDispositionID = function(accessToken, disp) {
 
               // WKT conversion to GEOJSON
               for (let geo of obj.interestParcels) {
-                var repro = null;
                 if (geo.wktGeometry) {
-                  // convert to geojson
-                  var wkt = new Wkt.Wkt();
-                  wkt.read(geo.wktGeometry);
-                  var geometry = wkt.toJson();
-
-                  var epsg = require('epsg');
-                  var reproject = require('reproject');
-
-                  // Convert for use in leaflet coords.
-                  repro = reproject.toWgs84(geometry, 'EPSG:3005', epsg);
                   var feature = {};
                   feature.TENURE_LEGAL_DESCRIPTION = geo.legalDescription;
                   feature.TENURE_AREA_IN_HECTARES = geo.areaInHectares;
@@ -327,11 +325,15 @@ exports.getApplicationByDispositionID = function(accessToken, disp) {
                   crs.properties = {};
                   crs.properties.name = 'urn:ogc:def:crs:EPSG::4326';
 
-                  application.parcels.push({
-                    type: 'Feature',
-                    geometry: repro,
-                    properties: feature,
-                    crs: crs
+                  const geometryArray = convertToLeafletFormat(convertToGeoJson(geo));
+
+                  geometryArray.forEach(geometry => {
+                    application.parcels.push({
+                      type: 'Feature',
+                      geometry: geometry,
+                      properties: feature,
+                      crs: crs
+                    });
                   });
                 }
               }
@@ -384,6 +386,60 @@ exports.getApplicationByDispositionID = function(accessToken, disp) {
       }
     );
   });
+};
+
+/**
+ * Converts interestParcels wkt geometry data to an array of GeoJson format polygons.
+ *
+ * Note on type GeometryCollection: A GeometryCollection is the type when specifying a super-set of distinct polygons.
+ * But this application currently only supports polygons and stores them as separate Features (see models/features.js).
+ * So this function parses out the GeometryCollection sub-polygons rather than returning a single GeometryCollection
+ * object that has multiple sub-polygon elements.
+ *
+ * @param {*} geo element of interestParcels
+ * @returns [{coordinates: [], type: string}] array of geoJSON objects of the form: {coordinates: [], type: string}
+ */
+const convertToGeoJson = function(geo) {
+  if (!geo || !geo.wktGeometry) {
+    return [];
+  }
+
+  const geoJSONArray = [];
+
+  // convert to geojson
+  const geoJSON = Wkx.Geometry.parse(geo.wktGeometry).toGeoJSON();
+
+  if (geoJSON.type === 'GeometryCollection') {
+    // parse out GeometryCollection sub-polygons.
+    geoJSON.geometries.forEach(element => {
+      geoJSONArray.push(element);
+    });
+  } else {
+    geoJSONArray.push(geoJSON);
+  }
+
+  return geoJSONArray;
+};
+
+/**
+ * Converts an array of GeoJson format objects to an array of EPSG:3005 format objects usable by leaflet.
+ *
+ * @param [{coordinates: [], type: string}] array of geoJson format objects of the form: {coordinates: [], type: string}
+ * @returns [{coordinates: [], type: string}] array of EPSG:3005 format objects of the form: {coordinates: [], type: string}
+ */
+const convertToLeafletFormat = function(geoJSONArray) {
+  if (!geoJSONArray) {
+    return [];
+  }
+
+  const leafletFormatArray = [];
+
+  geoJSONArray.forEach(element => {
+    // Convert for use in leaflet coords.
+    leafletFormatArray.push(reproject.toWgs84(element, 'EPSG:3005', epsg));
+  });
+
+  return leafletFormatArray;
 };
 
 /**
