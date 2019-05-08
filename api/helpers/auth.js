@@ -126,7 +126,7 @@ exports.issueToken = function(user, deviceId, scopes) {
 var hashPassword = function(user, password) {
   if (user.salt && password) {
     var crypto = require('crypto');
-    return crypto.pbkdf2Sync(password, new Buffer(user.salt, 'base64'), 10000, 64, 'sha1').toString('base64');
+    return crypto.pbkdf2Sync(password, Buffer.from(user.salt, 'base64'), 10000, 64, 'sha1').toString('base64');
   } else {
     return password;
   }
