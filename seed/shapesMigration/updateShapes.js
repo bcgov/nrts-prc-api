@@ -12,10 +12,14 @@
  *      i. Updates the ACRFD application features and meta to match whatever is in Tantalis (the source of truth).
  */
 
-// winston logger needs to be created before any local classes (that use the logger) are loaded.
+// winston logger needs to be created before any local classes that use the logger are loaded.
 const winston = require('winston');
 const defaultLog = winston.loggers.add('default', {
-  transports: [new winston.transports.Console()]
+  transports: [
+    new winston.transports.Console({
+      level: 'silly'
+    })
+  ]
 });
 
 var Promise = require('es6-promise').Promise;

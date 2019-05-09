@@ -187,8 +187,12 @@ exports.loginWebADE = function() {
         }
       },
       function(err, res, body) {
-        if (err || (res && res.statusCode !== 200)) {
+        if (err) {
+          defaultLog.error('WebADE Login Error:', err);
           reject(err);
+        } else if (res && res.statusCode !== 200) {
+          defaultLog.info('WebADE Login ResponseCode:', res.statusCode);
+          reject({ code: (res && res.statusCode) || null });
         } else {
           try {
             var obj = JSON.parse(body);
@@ -198,7 +202,7 @@ exports.loginWebADE = function() {
               reject();
             }
           } catch (e) {
-            defaultLog.error('loginWebADE Error:', e);
+            defaultLog.error('WebADE Login Error:', e);
             reject(e);
           }
         }
