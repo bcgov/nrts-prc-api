@@ -16,6 +16,7 @@ const winston = require('winston');
 const defaultLog = winston.loggers.add('default', {
   transports: [
     new winston.transports.Console({
+      level: 'silly',
       formatter: info => {
         return `${moment().format('DD-MM-YYYY HH:mm:ss')} ${info.level}: ${info.message}`;
       }
