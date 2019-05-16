@@ -113,9 +113,9 @@ var loginToACRFD = function(username, password) {
         },
         body: body
       },
-      function(err, res, body) {
-        if (err || res.statusCode !== 200) {
-          defaultLog.info(' - Login err:', err, res);
+      function(error, res, body) {
+        if (error || res.statusCode !== 200) {
+          defaultLog.error(' - loginToACRFD error:', error, res);
           reject(null);
         } else {
           var data = JSON.parse(body);
@@ -123,76 +123,6 @@ var loginToACRFD = function(username, password) {
           jwt_expiry = data.expires_in;
           jwt_login_time = moment();
           resolve(data.access_token);
-        }
-      }
-    );
-  });
-};
-
-/**
- * Gets an application from ACRFD.
- *
- * @param {String} route the api route to call in the form: 'api/some/route'. (required)
- * @param {number} batchNumber the pagination page to return, starting at 0. (optional)
- * @param {number} batchSize the number of applications per page. (optional)
- * @returns {Promise} promise that resolves with an array of applications.
- */
-var getApplicationByID = function(route, tantalisID) {
-  return new Promise(function(resolve, reject) {
-    // only update the ones that aren't deleted
-    const url = uri + route + '?fields=tantalisID&isDeleted=false&tantalisId=' + tantalisID;
-    request.get(
-      {
-        url: url,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + jwt_login
-        }
-      },
-      function(err, res, body) {
-        if (err) {
-          defaultLog.info(' - getApplication err:', err);
-          reject(err);
-        } else if (res.statusCode !== 200) {
-          defaultLog.info('res.statusCode:', res.statusCode);
-          reject(res.statusCode + ' ' + body);
-        } else {
-          var obj = {};
-          try {
-            obj = JSON.parse(body);
-            resolve(obj);
-          } catch (e) {
-            defaultLog.info(' - getApplication parse err:', e);
-          }
-        }
-      }
-    );
-  });
-};
-
-/**
- * Deletes the existing application features.
- *
- * @param {Application} acrfdApp Application
- * @returns {Promise}
- */
-var deleteAllApplicationFeatures = function(acrfdApp) {
-  return new Promise(function(resolve, reject) {
-    request.delete(
-      {
-        url: uri + 'api/feature?applicationID=' + acrfdApp._id,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + jwt_login
-        }
-      },
-      function(err, res, body) {
-        if (err || res.statusCode !== 200) {
-          defaultLog.info(' - deleteAllApplicationFeatures err:', err, res.body);
-          reject(null);
-        } else {
-          var data = JSON.parse(body);
-          resolve(data);
         }
       }
     );
@@ -220,190 +150,6 @@ var renewJWTLogin = function() {
 };
 
 /**
- * Updates and saves the application features.
- *
- * @param {Application} acrfdApp application as it exists in ACRFD
- * @param {Application} tantalisApp application with the latest values from Tantalis
- * @returns {Promise} promise that resolves wih the updated ACRFD application
- */
-var updateFeatures = function(acrfdApp, tantalisApp) {
-  return new Promise(function(resolve, reject) {
-    // defaultLog.info("returning:", tantalisApp);
-    // Store the features in the DB
-    var allFeaturesForDisp = [];
-    acrfdApp.areaHectares = tantalisApp.areaHectares;
-
-    var turf = require('@turf/turf');
-    var helpers = require('@turf/helpers');
-    var centroids = helpers.featureCollection([]);
-    _.each(tantalisApp.parcels, function(f) {
-      // Tags default public
-      f.tags = [['sysadmin'], ['public']];
-      // copy in all the app meta just to stay consistent.
-      f.properties.RESPONSIBLE_BUSINESS_UNIT = tantalisApp.RESPONSIBLE_BUSINESS_UNIT;
-      f.properties.TENURE_PURPOSE = tantalisApp.TENURE_PURPOSE;
-      f.properties.TENURE_SUBPURPOSE = tantalisApp.TENURE_SUBPURPOSE;
-      f.properties.TENURE_STATUS = tantalisApp.TENURE_STATUS;
-      f.properties.TENURE_TYPE = tantalisApp.TENURE_TYPE;
-      f.properties.TENURE_STAGE = tantalisApp.TENURE_STAGE;
-      f.properties.TENURE_SUBTYPE = tantalisApp.TENURE_SUBTYPE;
-      f.properties.TENURE_LOCATION = tantalisApp.TENURE_LOCATION;
-      f.properties.DISPOSITION_TRANSACTION_SID = tantalisApp.DISPOSITION_TRANSACTION_SID;
-      f.properties.CROWN_LANDS_FILE = tantalisApp.CROWN_LANDS_FILE;
-
-      allFeaturesForDisp.push(f);
-      // Get the polygon and put it for later centroid calculation
-      centroids.features.push(turf.centroid(f));
-    });
-    // Centroid of all the shapes.
-    if (centroids.features.length > 0) {
-      acrfdApp.centroid = turf.centroid(centroids).geometry.coordinates;
-    }
-    acrfdApp.client = '';
-    for (let [idx, client] of Object.entries(tantalisApp.interestedParties)) {
-      if (idx > 0) {
-        acrfdApp.client += ', ';
-      }
-      if (client.interestedPartyType == 'O') {
-        acrfdApp.client += client.legalName;
-      } else {
-        acrfdApp.client += client.firstName + ' ' + client.lastName;
-      }
-    }
-    acrfdApp.statusHistoryEffectiveDate = tantalisApp.statusHistoryEffectiveDate;
-
-    Promise.resolve()
-      .then(function() {
-        return allFeaturesForDisp.reduce(function(previousFeature, currentFeature) {
-          return previousFeature.then(function() {
-            return saveFeatures(currentFeature, acrfdApp._id);
-          });
-        }, Promise.resolve());
-      })
-      .then(function() {
-        resolve(acrfdApp);
-      });
-  });
-};
-
-/**
- * Saves the application features.
- *
- * @param {Application} feature Application feature
- * @param {String} acrfdAppId Application id
- * @returns {Promise}
- */
-var saveFeatures = function(feature, acrfdAppId) {
-  return new Promise(function(resolve, reject) {
-    feature.applicationID = acrfdAppId;
-    request.post(
-      {
-        url: uri + 'api/feature',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + jwt_login
-        },
-        body: JSON.stringify(feature)
-      },
-      function(err, res, body) {
-        if (err || res.statusCode !== 200) {
-          defaultLog.info(' - doFeatureSave err:', err, res);
-          reject(null);
-        } else {
-          var data = JSON.parse(body);
-          resolve(data);
-        }
-      }
-    );
-  });
-};
-
-/**
- * Updates and saves the ACRFD application meta.
- *
- * @param {Application} acrfdApp
- * @param {Object} tantalisApp
- * @returns
- */
-var updateApplicationMeta = function(acrfdApp, tantalisApp) {
-  return new Promise(function(resolve, reject) {
-    var updatedAppObject = {};
-    updatedAppObject.businessUnit = tantalisApp.RESPONSIBLE_BUSINESS_UNIT;
-    updatedAppObject.purpose = tantalisApp.TENURE_PURPOSE;
-    updatedAppObject.subpurpose = tantalisApp.TENURE_SUBPURPOSE;
-    updatedAppObject.status = tantalisApp.TENURE_STATUS;
-    updatedAppObject.type = tantalisApp.TENURE_TYPE;
-    updatedAppObject.tenureStage = tantalisApp.TENURE_STAGE;
-    updatedAppObject.subtype = tantalisApp.TENURE_SUBTYPE;
-    updatedAppObject.location = tantalisApp.TENURE_LOCATION;
-    updatedAppObject.legalDescription = tantalisApp.TENURE_LEGAL_DESCRIPTION;
-    updatedAppObject.centroid = acrfdApp.centroid;
-    updatedAppObject.areaHectares = acrfdApp.areaHectares;
-    updatedAppObject.client = acrfdApp.client;
-    updatedAppObject.statusHistoryEffectiveDate = acrfdApp.statusHistoryEffectiveDate;
-
-    request.put(
-      {
-        url: uri + 'api/application/' + acrfdApp._id,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + jwt_login
-        },
-        body: JSON.stringify(updatedAppObject)
-      },
-      function(err, res, body) {
-        if (err || res.statusCode !== 200) {
-          defaultLog.info(' - updateApplicationMeta err:', err, res);
-          reject(null);
-        } else {
-          var data = JSON.parse(body);
-          resolve(data);
-        }
-      }
-    );
-  });
-};
-
-/**
- * Given an ACRFD applications tantalisID (disposition ID), makes all necessary calls to update it with the latest information from Tantalis.
- *
- * @param {string} applicationIDToUpdate a tantalisID
- * @returns {Promise}
- */
-var updateApplication = function(applicationIDToUpdate) {
-  return renewJWTLogin()
-    .then(function() {
-      return getApplicationByID('api/application', applicationIDToUpdate);
-    })
-    .then(function(applicationsToUpdate) {
-      // Only expecting 1 result, but the API returns an array
-      return applicationsToUpdate.reduce(function(previousApp, currentApp) {
-        return previousApp.then(function() {
-          defaultLog.info('-----------------------------------------------');
-          defaultLog.info(`6. Updating ACRFD Application, tantalisID: ${currentApp.tantalisID}`);
-          defaultLog.info(' - Fetching Tantalis application');
-          return Utils.getApplicationByDispositionID(_accessToken, currentApp.tantalisID).then(function(tantalisApp) {
-            if (!tantalisApp) {
-              defaultLog.info(' - No Tantalis application found - not updating.');
-              return Promise.resolve();
-            }
-            defaultLog.info(' - Deleting existing application features');
-            return deleteAllApplicationFeatures(currentApp)
-              .then(function() {
-                defaultLog.info(' - Updating new application features');
-                return updateFeatures(currentApp, tantalisApp);
-              })
-              .then(function(updatedApp) {
-                defaultLog.info(' - Updating new application meta');
-                return updateApplicationMeta(updatedApp, tantalisApp);
-              });
-          });
-        });
-      }, Promise.resolve());
-    });
-};
-
-/**
  * Fetches all ACRFD applications that have a retired status AND a statusHistoryEffectiveDate within the past 2 weeks 6 months ago.
  *
  * @returns {Promise} promise that resolves with the list of retired applications.
@@ -428,9 +174,9 @@ var getApplicationsToUnpublish = function() {
           Authorization: 'Bearer ' + jwt_login
         }
       },
-      function(err, res, body) {
-        if (err || res.statusCode !== 200) {
-          defaultLog.info(' - getApplicationsToUnpublish err:', err, res);
+      function(error, res, body) {
+        if (error || res.statusCode !== 200) {
+          defaultLog.error(' - getApplicationsToUnpublish error:', error, res);
           reject(null);
         } else {
           var data = JSON.parse(body);
@@ -465,9 +211,9 @@ var unpublishApplications = function(applicationsToUnpublish) {
             },
             body: JSON.stringify(currentApp)
           },
-          function(err, res, body) {
-            if (err || res.statusCode !== 200) {
-              defaultLog.info(' - unpublishApplications err:', err, body);
+          function(error, res, body) {
+            if (error || res.statusCode !== 200) {
+              defaultLog.error(' - unpublishApplications error:', error, body);
               reject(null);
             } else {
               defaultLog.info(` - Unpublished application, _id: ${currentApp._id}`);
@@ -482,11 +228,52 @@ var unpublishApplications = function(applicationsToUnpublish) {
 };
 
 /**
- * Gets all non-deleted ACRFD application tantalis IDs.
+ * Updates an ACRFD applications features and meta with the latest data from Tantalis.
  *
- * @returns {Promise} promise that resolves with an array of ACRFD application tantalisIDs.
+ * @param {string} acrfdAppID Application _id.
+ * @returns {Promise}
  */
-var getAllApplicationIDs = function() {
+const updateACRFDApplication = function(acrfdAppID) {
+  return new Promise(function(resolve, reject) {
+    // only update the ones that aren't deleted
+    const url = uri + `api/application/${acrfdAppID}/refresh`;
+    request.put(
+      {
+        url: url,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + jwt_login
+        }
+      },
+      function(error, res, body) {
+        if (error) {
+          defaultLog.error(' - updateACRFDApplication error:', error);
+          reject(error);
+        } else if (res.statusCode !== 200) {
+          defaultLog.warn(' - updateACRFDApplication response statusCode:', res.statusCode);
+          reject(res.statusCode + ' ' + body);
+        } else {
+          var obj = {};
+          try {
+            obj = JSON.parse(body);
+            resolve(obj);
+          } catch (e) {
+            defaultLog.info(' - updateACRFDApplication parse error:', e);
+          }
+        }
+      }
+    );
+  });
+};
+
+/**
+ * Gets all non-deleted ACRFD applications.
+ *
+ * Note: Only returns _id and tantalisID fields.
+ *
+ * @returns {Promise} promise that resolves with an array of ACRFD applications.
+ */
+var getAllACRFDApplicationIDs = function() {
   return new Promise(function(resolve, reject) {
     // only update the ones that aren't deleted
     const url = uri + 'api/application/' + '?fields=tantalisID&isDeleted=false';
@@ -498,12 +285,12 @@ var getAllApplicationIDs = function() {
           Authorization: 'Bearer ' + jwt_login
         }
       },
-      function(err, res, body) {
-        if (err) {
-          defaultLog.info(' - getAllApplicationIDs err:', err);
-          reject(err);
+      function(error, res, body) {
+        if (error) {
+          defaultLog.error(' - getAllApplicationIDs error:', error);
+          reject(error);
         } else if (res.statusCode !== 200) {
-          defaultLog.info('res.statusCode:', res.statusCode);
+          defaultLog.warn(' - updateACRFDApplication response statusCode:', res.statusCode);
           reject(res.statusCode + ' ' + body);
         } else {
           var obj = {};
@@ -511,7 +298,7 @@ var getAllApplicationIDs = function() {
             obj = JSON.parse(body);
             resolve(obj);
           } catch (e) {
-            defaultLog.info(' - getAllApplicationIDs parse err:', e);
+            defaultLog.info(' - getAllACRFDApplicationIDs parse error:', e);
           }
         }
       }
@@ -554,23 +341,27 @@ loginToACRFD(username, password)
     defaultLog.info(
       '5. Fetching all non-deleted ACRFD applications and cross referencing with recently updated Tantalis applications.'
     );
-    return getAllApplicationIDs().then(function(allACRFDApplicationIDs) {
+    return getAllACRFDApplicationIDs().then(function(allACRFDApplicationIDs) {
       return allACRFDApplicationIDs
-        .map(app => app.tantalisID)
-        .filter(tantalisID => recentlyUpdatedApplicationIDs.includes(tantalisID));
+        .filter(acrfdApp => recentlyUpdatedApplicationIDs.includes(acrfdApp.tantalisID))
+        .map(acrfdApp => acrfdApp._id);
     });
   })
   .then(function(applicationIDsToUpdate) {
     defaultLog.info(
       ` - Found ${
         applicationIDsToUpdate.length
-      } ACRFD Applications with matching recently updated Tantalis application.`
+      } ACRFD Applications with a matching recently updated Tantalis application.`
     );
     // For each ACRFD application with a matching recently updated application from Tantalis, fetch the matching record in ACRFD and update it
     return applicationIDsToUpdate.reduce(function(previousItem, currentItem) {
       return previousItem.then(function() {
-        // Each iteration, check if the ACRFD login token needs to be re-fetched
-        return updateApplication(currentItem);
+        defaultLog.info('-----------------------------------------------');
+        defaultLog.info(`6. Updating ACRFD Application, _id: ${currentItem}`);
+        // Each iteration, check if the ACRFD login token is nearly expired and needs to be re-fetched
+        return renewJWTLogin().then(function() {
+          return updateACRFDApplication(currentItem);
+        });
       });
     }, Promise.resolve());
   })
@@ -579,9 +370,9 @@ loginToACRFD(username, password)
     defaultLog.info('Done!');
     defaultLog.info('=======================================================');
   })
-  .catch(function(err) {
+  .catch(function(error) {
     defaultLog.info('-----------------------------------------------');
-    defaultLog.info(' - General err:', err);
+    defaultLog.info(' - General error:', error);
     defaultLog.info('=======================================================');
     process.exit(1);
   });
