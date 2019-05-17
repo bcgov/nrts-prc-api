@@ -27,8 +27,9 @@ var _ = require('lodash');
 var request = require('request');
 var querystring = require('querystring');
 var moment = require('moment');
-var Utils = require('../../api/helpers/utils');
+var TTLSUtils = require('../../api/helpers/ttlsUtils');
 var Actions = require('../../api/helpers/actions');
+
 var username = '';
 var password = '';
 var protocol = 'http';
@@ -322,7 +323,7 @@ loginToACRFD(username, password)
   .then(function() {
     defaultLog.info('-----------------------------------------------');
     defaultLog.info('3. Authenticating with Tantalis.');
-    return Utils.loginWebADE().then(function(accessToken) {
+    return TTLSUtils.loginWebADE().then(function(accessToken) {
       defaultLog.info(' - TTLS API login token:', accessToken);
       _accessToken = accessToken;
       return _accessToken;
@@ -334,7 +335,7 @@ loginToACRFD(username, password)
     var lastWeek = moment()
       .subtract(1, 'week')
       .format('YYYYMMDD');
-    return Utils.getAllApplicationIDs(_accessToken, { updated: lastWeek });
+    return TTLSUtils.getAllApplicationIDs(_accessToken, { updated: lastWeek });
   })
   .then(function(recentlyUpdatedApplicationIDs) {
     defaultLog.info('-----------------------------------------------');

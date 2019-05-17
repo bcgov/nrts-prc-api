@@ -366,11 +366,11 @@ exports.protectedPost = function(args, res, next) {
   app.createdDate = Date.now();
   app.save().then(function(savedApp) {
     return new Promise(function(resolve, reject) {
-      return Utils.loginWebADE()
+      return TTLSUtils.loginWebADE()
         .then(function(accessToken) {
           defaultLog.debug('TTLS API Logged in:', accessToken);
           // Disp lookup
-          return Utils.getApplicationByDispositionID(accessToken, savedApp.tantalisID);
+          return TTLSUtils.getApplicationByDispositionID(accessToken, savedApp.tantalisID);
         })
         .then(resolve, reject);
     })
@@ -513,6 +513,7 @@ exports.protectedUnPublish = function(args, res, next) {
   });
 };
 
+// Refreshes an applications meta and features with the latest data from Tantalis.
 exports.protectedRefresh = function(args, res, next) {
   var objId = args.swagger.params.appId.value;
   defaultLog.info('Refresh Application, _id:', objId);
