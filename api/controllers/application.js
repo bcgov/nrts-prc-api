@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 var qs = require('qs');
 var Actions = require('../helpers/actions');
 var Utils = require('../helpers/utils');
+var TTLSUtils = require('../helpers/ttlsUtils');
 var tagList = [
   'agency',
   'areaHectares',
@@ -480,6 +481,7 @@ exports.protectedPublish = function(args, res, next) {
     }
   });
 };
+
 exports.protectedUnPublish = function(args, res, next) {
   var objId = args.swagger.params.appId.value;
   defaultLog.info('UnPublish Application:', objId);
@@ -506,6 +508,30 @@ exports.protectedUnPublish = function(args, res, next) {
         );
     } else {
       defaultLog.info("Couldn't find that object!");
+      return Actions.sendResponse(res, 404, {});
+    }
+  });
+};
+
+exports.protectedRefresh = function(args, res, next) {
+  var objId = args.swagger.params.appId.value;
+  defaultLog.info('Refresh Application, _id:', objId);
+
+  var Application = require('mongoose').model('Application');
+  Application.findOne({ _id: objId }, function(err, applicationObject) {
+    if (applicationObject) {
+      defaultLog.info('applicationObject:', JSON.stringify(applicationObject));
+
+      TTLSUtils.updateApplication(applicationObject).then(
+        updatedApplicationObject => {
+          return Actions.sendResponse(res, 200, updatedApplicationObject);
+        },
+        error => {
+          return Actions.sendResponse(res, null, error);
+        }
+      );
+    } else {
+      defaultLog.warn("Couldn't find that object!");
       return Actions.sendResponse(res, 404, {});
     }
   });
