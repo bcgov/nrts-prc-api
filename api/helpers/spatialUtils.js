@@ -4,7 +4,7 @@
  * This file contains various utility functions for working with spatial data.
  */
 
-var Wkx = require('wkx');
+const Wkx = require('wkx');
 const epsg = require('epsg');
 const reproject = require('reproject');
 
