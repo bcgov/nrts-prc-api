@@ -30,8 +30,10 @@ npm-debug.log
 testem.log
 /typings
 package-lock.json
+seed/package-lock.json
 yarn-error.log
 yarn.lock
+seed/yarn.lock
 debug.log
 
 # Project Files

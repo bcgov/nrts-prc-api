@@ -146,7 +146,7 @@ exports.protectedPut = function(args, res, next) {
       defaultLog.info('o:', o);
       return Actions.sendResponse(res, 200, o);
     } else {
-      defaultLog.info("Couldn't find that object!");
+      defaultLog.warn("Couldn't find that object!");
       return Actions.sendResponse(res, 404, {});
     }
   });
@@ -174,7 +174,7 @@ exports.protectedPublish = function(args, res, next) {
         }
       );
     } else {
-      defaultLog.info("Couldn't find that object!");
+      defaultLog.warn("Couldn't find that object!");
       return Actions.sendResponse(res, 404, {});
     }
   });
@@ -200,7 +200,7 @@ exports.protectedUnPublish = function(args, res, next) {
         }
       );
     } else {
-      defaultLog.info("Couldn't find that object!");
+      defaultLog.warn("Couldn't find that object!");
       return Actions.sendResponse(res, 404, {});
     }
   });
