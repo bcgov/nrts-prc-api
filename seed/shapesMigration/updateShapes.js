@@ -6,7 +6,7 @@
  *    a. Fetches all ACRFD applications that have reached a retired state (assumes 6 months is the retirement period), and unpublishes any found.
  * 3. AUthenticates with Tantalis
  * 4. Updates non-deleted ACRFD applications:
- *    a. Fetches all Tantalis applications that have had an update within the last 1 week.
+ *    a. Fetches all Tantalis applications that have had their status history effective date update within the last 1 week.
  *    b. Fetches all non-deleted ACRFD tantalisIDs.
  *    c. For each ACRFD application with a matching Tantalis application:
  *      i. Updates the ACRFD application features and meta to match whatever is in Tantalis (the source of truth).
@@ -44,7 +44,7 @@ var _accessToken = '';
 var args = process.argv.slice(2);
 defaultLog.info('=======================================================');
 if (args.length !== 8) {
-  defaultLog.info(
+  defaultLog.error(
     'Please specify proper parameters: <username> <password> <protocol> <host> <port> <client_id> <grant_type> <auth_endpoint>'
   );
   defaultLog.info('Example: node updateShapes.js admin admin http localhost 3000 client_id grant_type auth_endpoint');
@@ -115,9 +115,12 @@ var loginToACRFD = function(username, password) {
         body: body
       },
       function(error, res, body) {
-        if (error || res.statusCode !== 200) {
-          defaultLog.error(' - loginToACRFD error:', error, res);
-          reject(null);
+        if (error) {
+          defaultLog.error(' - loginToACRFD error:', error);
+          reject(error);
+        } else if (res.statusCode !== 200) {
+          defaultLog.error(' - loginToACRFD error:', res.statusCode, body);
+          reject(res.statusCode + ' ' + body);
         } else {
           var data = JSON.parse(body);
           jwt_login = data.access_token;
@@ -151,20 +154,17 @@ var renewJWTLogin = function() {
 };
 
 /**
- * Fetches all ACRFD applications that have a retired status AND a statusHistoryEffectiveDate within the past 2 weeks 6 months ago.
+ * Fetches all ACRFD applications that have a retired status AND a statusHistoryEffectiveDate older than 6 months ago.
  *
  * @returns {Promise} promise that resolves with the list of retired applications.
  */
 var getApplicationsToUnpublish = function() {
   defaultLog.info(' - fetching retired applications.');
   return new Promise(function(resolve, reject) {
-    var sinceDate = moment()
-      .subtract(6, 'months')
-      .subtract(2, 'weeks');
     var untilDate = moment().subtract(6, 'months');
 
-    // get all applications that are in a retired status, and that have a last status update date within in the past week 6 months ago.
-    var queryString = `?statusHistoryEffectiveDate[since]=${sinceDate.toISOString()}&statusHistoryEffectiveDate[until]=${untilDate.toISOString()}`;
+    // get all applications that are in a retired status and that have a last status update date older than 6 months ago.
+    var queryString = `?statusHistoryEffectiveDate[until]=${untilDate.toISOString()}`;
     retiredStatuses.forEach(status => (queryString += `&status[eq]=${encodeURIComponent(status)}`));
 
     request.get(
@@ -176,9 +176,12 @@ var getApplicationsToUnpublish = function() {
         }
       },
       function(error, res, body) {
-        if (error || res.statusCode !== 200) {
-          defaultLog.error(' - getApplicationsToUnpublish error:', error, res);
-          reject(null);
+        if (error) {
+          defaultLog.error(' - getApplicationsToUnpublish error:', error);
+          reject(error);
+        } else if (res.statusCode !== 200) {
+          defaultLog.error(' - getApplicationsToUnpublish error:', res.statusCode, body);
+          reject(res.statusCode + ' ' + body);
         } else {
           var data = JSON.parse(body);
 
@@ -213,9 +216,12 @@ var unpublishApplications = function(applicationsToUnpublish) {
             body: JSON.stringify(currentApp)
           },
           function(error, res, body) {
-            if (error || res.statusCode !== 200) {
-              defaultLog.error(' - unpublishApplications error:', error, body);
-              reject(null);
+            if (error) {
+              defaultLog.error(' - unpublishApplications error:', error);
+              reject(error);
+            } else if (res.statusCode !== 200) {
+              defaultLog.error(' - unpublishApplications error:', res.statusCode, body);
+              reject(res.statusCode + ' ' + body);
             } else {
               defaultLog.info(` - Unpublished application, _id: ${currentApp._id}`);
               var data = JSON.parse(body);
@@ -251,7 +257,7 @@ const updateACRFDApplication = function(acrfdAppID) {
           defaultLog.error(' - updateACRFDApplication error:', error);
           reject(error);
         } else if (res.statusCode !== 200) {
-          defaultLog.warn(' - updateACRFDApplication response statusCode:', res.statusCode);
+          defaultLog.error(' - updateACRFDApplication error:', res.statusCode, body);
           reject(res.statusCode + ' ' + body);
         } else {
           var obj = {};
@@ -288,10 +294,10 @@ var getAllACRFDApplicationIDs = function() {
       },
       function(error, res, body) {
         if (error) {
-          defaultLog.error(' - getAllApplicationIDs error:', error);
+          defaultLog.error(' - getAllACRFDApplicationIDs error:', error);
           reject(error);
         } else if (res.statusCode !== 200) {
-          defaultLog.warn(' - updateACRFDApplication response statusCode:', res.statusCode);
+          defaultLog.error(' - getAllACRFDApplicationIDs error:', res.statusCode, body);
           reject(res.statusCode + ' ' + body);
         } else {
           var obj = {};
@@ -331,7 +337,9 @@ loginToACRFD(username, password)
   })
   .then(function() {
     defaultLog.info('-----------------------------------------------');
-    defaultLog.info('4. Fetching all Tantalis applications that have been updated in the last week.');
+    defaultLog.info(
+      '4. Fetching all Tantalis applications that have had their status history effective date updated in the last week.'
+    );
     var lastWeek = moment()
       .subtract(1, 'week')
       .format('YYYYMMDD');
@@ -372,8 +380,8 @@ loginToACRFD(username, password)
     defaultLog.info('=======================================================');
   })
   .catch(function(error) {
-    defaultLog.info('-----------------------------------------------');
-    defaultLog.info(' - General error:', error);
-    defaultLog.info('=======================================================');
+    defaultLog.error('-----------------------------------------------');
+    defaultLog.error(' - General error:', error);
+    defaultLog.error('=======================================================');
     process.exit(1);
   });
