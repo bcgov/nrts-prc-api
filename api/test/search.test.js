@@ -7,7 +7,7 @@ const arcGisResponse = require('./fixtures/arcgis_response.json');
 const crownlandsResponse = require('./fixtures/crownlands_response.json');
 const tantalisResponse = require('./fixtures/tantalis_response.json');
 const fieldNames = [];
-const Utils = require('../helpers/utils');
+const TTLSUtils = require('../helpers/ttlsUtils');
 
 function publicParamsWithDtId(req) {
   let params = test_helper.buildParams({ dtId: req.params.id });
@@ -70,11 +70,11 @@ describe('GET /api/search/ttlsapi/crownLandFileNumber/', () => {
     });
 
     beforeEach(() => {
-      spyOn(Utils, 'loginWebADE').and.returnValue(loginPromise);
+      spyOn(TTLSUtils, 'loginWebADE').and.returnValue(loginPromise);
 
-      spyOn(Utils, 'getApplicationByFilenumber').and.returnValue(appFileNumSearchPromise);
+      spyOn(TTLSUtils, 'getApplicationByFilenumber').and.returnValue(appFileNumSearchPromise);
 
-      spyOn(Utils, 'getApplicationByDispositionID').and.returnValue(appDispSearchPromise);
+      spyOn(TTLSUtils, 'getApplicationByDispositionID').and.returnValue(appDispSearchPromise);
     });
 
     test('logs in and then searches TTLS by CLFileNumber with that access token', done => {
@@ -82,8 +82,8 @@ describe('GET /api/search/ttlsapi/crownLandFileNumber/', () => {
         .get('/api/search/ttlsapi/crownLandFileNumber/' + clFileNumber)
         .expect(200)
         .then(response => {
-          expect(Utils.loginWebADE).toHaveBeenCalled();
-          expect(Utils.getApplicationByFilenumber).toHaveBeenCalledWith('ACCESS_TOKEN', '555555');
+          expect(TTLSUtils.loginWebADE).toHaveBeenCalled();
+          expect(TTLSUtils.getApplicationByFilenumber).toHaveBeenCalledWith('ACCESS_TOKEN', '555555');
           done();
         });
     });
@@ -93,10 +93,10 @@ describe('GET /api/search/ttlsapi/crownLandFileNumber/', () => {
         .get('/api/search/ttlsapi/crownLandFileNumber/' + clFileNumber)
         .expect(200)
         .then(response => {
-          expect(Utils.getApplicationByFilenumber).toHaveBeenCalledWith('ACCESS_TOKEN', '555555');
+          expect(TTLSUtils.getApplicationByFilenumber).toHaveBeenCalledWith('ACCESS_TOKEN', '555555');
 
-          expect(Utils.getApplicationByDispositionID).toHaveBeenCalledWith('ACCESS_TOKEN', 111111);
-          expect(Utils.getApplicationByDispositionID).toHaveBeenCalledWith('ACCESS_TOKEN', 222222);
+          expect(TTLSUtils.getApplicationByDispositionID).toHaveBeenCalledWith('ACCESS_TOKEN', 111111);
+          expect(TTLSUtils.getApplicationByDispositionID).toHaveBeenCalledWith('ACCESS_TOKEN', 222222);
 
           done();
         });
@@ -121,7 +121,7 @@ describe('GET /api/search/ttlsapi/crownLandFileNumber/', () => {
     });
 
     beforeEach(() => {
-      spyOn(Utils, 'loginWebADE').and.returnValue(loginPromise);
+      spyOn(TTLSUtils, 'loginWebADE').and.returnValue(loginPromise);
     });
 
     test('returns that error response', done => {
@@ -152,9 +152,9 @@ describe('GET /api/search/ttlsapi/dispositionTransactionId/', () => {
     });
 
     beforeEach(() => {
-      spyOn(Utils, 'loginWebADE').and.returnValue(loginPromise);
+      spyOn(TTLSUtils, 'loginWebADE').and.returnValue(loginPromise);
 
-      spyOn(Utils, 'getApplicationByDispositionID').and.returnValue(appDispSearchPromise);
+      spyOn(TTLSUtils, 'getApplicationByDispositionID').and.returnValue(appDispSearchPromise);
     });
 
     test('logs in and then retrieves the application with that access token', done => {
@@ -162,8 +162,8 @@ describe('GET /api/search/ttlsapi/dispositionTransactionId/', () => {
         .get('/api/search/ttlsapi/dispositionTransactionId/' + dispositionId)
         .expect(200)
         .then(response => {
-          expect(Utils.loginWebADE).toHaveBeenCalled();
-          expect(Utils.getApplicationByDispositionID).toHaveBeenCalledWith('ACCESS_TOKEN', '666666');
+          expect(TTLSUtils.loginWebADE).toHaveBeenCalled();
+          expect(TTLSUtils.getApplicationByDispositionID).toHaveBeenCalledWith('ACCESS_TOKEN', '666666');
           done();
         });
     });
@@ -175,7 +175,7 @@ describe('GET /api/search/ttlsapi/dispositionTransactionId/', () => {
     });
 
     beforeEach(() => {
-      spyOn(Utils, 'loginWebADE').and.returnValue(loginPromise);
+      spyOn(TTLSUtils, 'loginWebADE').and.returnValue(loginPromise);
     });
 
     test('returns that error response', done => {
