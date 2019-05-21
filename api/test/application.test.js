@@ -7,7 +7,7 @@ const request = require('supertest');
 // const tantalisResponse = require('./fixtures/tantalis_response.json');
 const fieldNames = ['description', 'tantalisID'];
 const _ = require('lodash');
-const Utils = require('../helpers/utils');
+const TTLSUtils = require('../helpers/ttlsUtils');
 
 const applicationController = require('../controllers/application.js');
 require('../helpers/models/application');
@@ -304,9 +304,9 @@ describe('POST /application', () => {
     });
 
     beforeEach(() => {
-      spyOn(Utils, 'loginWebADE').and.returnValue(loginPromise);
+      spyOn(TTLSUtils, 'loginWebADE').and.returnValue(loginPromise);
 
-      spyOn(Utils, 'getApplicationByDispositionID').and.returnValue(appDispSearchPromise);
+      spyOn(TTLSUtils, 'getApplicationByDispositionID').and.returnValue(appDispSearchPromise);
     });
 
     test('logs in and then retrieves the application with that access token', done => {
@@ -315,8 +315,8 @@ describe('POST /application', () => {
         .send(applicationObj)
         .expect(200)
         .then(response => {
-          expect(Utils.loginWebADE).toHaveBeenCalled();
-          expect(Utils.getApplicationByDispositionID).toHaveBeenCalledWith('ACCESS_TOKEN', 999999);
+          expect(TTLSUtils.loginWebADE).toHaveBeenCalled();
+          expect(TTLSUtils.getApplicationByDispositionID).toHaveBeenCalledWith('ACCESS_TOKEN', 999999);
           done();
         });
     });
@@ -509,7 +509,7 @@ describe('POST /application', () => {
     });
 
     beforeEach(() => {
-      spyOn(Utils, 'loginWebADE').and.returnValue(loginPromise);
+      spyOn(TTLSUtils, 'loginWebADE').and.returnValue(loginPromise);
     });
 
     test('returns that error response and a 400 status code', done => {

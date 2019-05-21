@@ -1,8 +1,8 @@
-const Utils = require('../../helpers/utils');
+const TTLSUtils = require('../../helpers/ttlsUtils');
 const nock = require('nock');
 var _ = require('lodash');
 
-describe('utils', () => {
+describe('TTLSUtils', () => {
   const nrsApiDomain = 'https://api.nrs.gov.bc.ca';
   const loginPath = '/oauth2/v1/oauth/token?grant_type=client_credentials&disableDeveloperFilter=true';
   const headers = {
@@ -25,7 +25,7 @@ describe('utils', () => {
       });
 
       test('returns the access token', done => {
-        Utils.loginWebADE().then(response => {
+        TTLSUtils.loginWebADE().then(response => {
           expect(response).toEqual('ACCESS_TOKEN');
           done();
         });
@@ -41,7 +41,7 @@ describe('utils', () => {
       });
 
       test('rejects the promise', done => {
-        Utils.loginWebADE().catch(response => {
+        TTLSUtils.loginWebADE().catch(response => {
           done();
         });
       });
@@ -141,7 +141,7 @@ describe('utils', () => {
       });
 
       test('returns an application with the right tenure types and purposes', done => {
-        Utils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
+        TTLSUtils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
           expect(response.length).toEqual(1);
           let firstApplication = response[0];
           expect(firstApplication.TENURE_PURPOSE).toEqual('I have a very important purpose in life!');
@@ -154,7 +154,7 @@ describe('utils', () => {
       });
 
       test('returns an application with the expected tenure status, stage, and location attrs', done => {
-        Utils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
+        TTLSUtils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
           expect(response.length).toEqual(1);
           let firstApplication = response[0];
 
@@ -167,7 +167,7 @@ describe('utils', () => {
       });
 
       test('returns an application with the correct additional attributes', done => {
-        Utils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
+        TTLSUtils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
           expect(response.length).toEqual(1);
           let firstApplication = response[0];
           expect(firstApplication.RESPONSIBLE_BUSINESS_UNIT).toEqual('Super evil corporation');
@@ -308,7 +308,7 @@ describe('utils', () => {
       });
 
       test('returns an application with the right tenure types and purposes', done => {
-        Utils.getApplicationByDispositionID(accessToken, dispId).then(response => {
+        TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(response => {
           let firstApplication = response;
           expect(firstApplication.TENURE_PURPOSE).toEqual('I have a very important purpose in life!');
           expect(firstApplication.TENURE_SUBPURPOSE).toEqual('This is the first subpurpose description');
@@ -320,7 +320,7 @@ describe('utils', () => {
       });
 
       test('returns an application with the expected tenure status, stage, and location attrs', done => {
-        Utils.getApplicationByDispositionID(accessToken, dispId).then(response => {
+        TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(response => {
           let firstApplication = response;
 
           expect(firstApplication.TENURE_STATUS).toEqual('DISPOSITION IN GOOD STANDING');
@@ -332,7 +332,7 @@ describe('utils', () => {
       });
 
       test('returns an application with the correct additional attributes', done => {
-        Utils.getApplicationByDispositionID(accessToken, dispId).then(response => {
+        TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(response => {
           let firstApplication = response;
           expect(firstApplication.RESPONSIBLE_BUSINESS_UNIT).toEqual('Super evil corporation');
           expect(firstApplication.CROWN_LANDS_FILE).toEqual('888888');
@@ -343,7 +343,7 @@ describe('utils', () => {
       });
 
       test('sets the statusHistoryEffectiveDate', done => {
-        Utils.getApplicationByDispositionID(accessToken, dispId).then(response => {
+        TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(response => {
           expect(response.statusHistoryEffectiveDate).toEqual(new Date(1527878179000));
 
           done();
@@ -353,7 +353,7 @@ describe('utils', () => {
       describe('parcels', () => {
         // TODO: Figure out how to to properly test centroid and areaHectares calculation
         test('sets the areaHectares and centroid properties', done => {
-          Utils.getApplicationByDispositionID(accessToken, dispId).then(application => {
+          TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.areaHectares).toEqual(3.333);
             expect(application.centroid).not.toBeNull();
 
@@ -362,7 +362,7 @@ describe('utils', () => {
         });
 
         test('it adds parcels to the application', done => {
-          Utils.getApplicationByDispositionID(accessToken, dispId).then(application => {
+          TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels).not.toBeNull();
             expect(application.parcels.length).toEqual(1);
             const firstParcel = application.parcels[0];
@@ -373,7 +373,7 @@ describe('utils', () => {
         });
 
         test('it sets the feature tenure properties correctly on the parcel', done => {
-          Utils.getApplicationByDispositionID(accessToken, dispId).then(application => {
+          TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels.length).toEqual(1);
             const firstParcel = application.parcels[0];
             const properties = firstParcel.properties;
@@ -387,7 +387,7 @@ describe('utils', () => {
         });
 
         test('it sets the feature properties correctly on the parcel', done => {
-          Utils.getApplicationByDispositionID(accessToken, dispId).then(application => {
+          TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels.length).toEqual(1);
             const firstParcel = application.parcels[0];
             const properties = firstParcel.properties;
@@ -401,7 +401,7 @@ describe('utils', () => {
         });
 
         test('sets the crs properties name', done => {
-          Utils.getApplicationByDispositionID(accessToken, dispId).then(application => {
+          TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels.length).toEqual(1);
             const firstParcel = application.parcels[0];
             const crs = firstParcel.crs;
@@ -414,7 +414,7 @@ describe('utils', () => {
 
         // Not sure how to go about testing this, so I'm just testing that something gets set.
         test('sets the geometry', done => {
-          Utils.getApplicationByDispositionID(accessToken, dispId).then(application => {
+          TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels.length).toEqual(1);
             const firstParcel = application.parcels[0];
             const geometry = firstParcel.geometry;
@@ -430,7 +430,7 @@ describe('utils', () => {
       describe('interestedParties', () => {
         describe('with an individual party type object', () => {
           test('it adds the individual party object to the interestedParties array', done => {
-            Utils.getApplicationByDispositionID(accessToken, dispId).then(application => {
+            TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
               expect(application.interestedParties.length).toEqual(2);
               const individualParty = _.find(application.interestedParties, { interestedPartyType: 'I' });
               expect(individualParty.firstName).toEqual('John');
@@ -444,7 +444,7 @@ describe('utils', () => {
 
         describe('with an organization party type object', () => {
           test('it adds the organization party object to the interestedParties array', done => {
-            Utils.getApplicationByDispositionID(accessToken, dispId).then(application => {
+            TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
               expect(application.interestedParties.length).toEqual(2);
               const orgParty = _.find(application.interestedParties, { interestedPartyType: 'O' });
               expect(orgParty.legalName).toEqual('Operation Car Wash');
@@ -464,7 +464,7 @@ describe('utils', () => {
       });
 
       test('it rejects with an error object', done => {
-        Utils.getApplicationByDispositionID(accessToken, dispId).catch(error => {
+        TTLSUtils.getApplicationByDispositionID(accessToken, dispId).catch(error => {
           expect(error).not.toBeNull();
           expect(error.statusCode).toEqual(500);
 

@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var defaultLog = require('winston').loggers.get('default');
 var Actions = require('../helpers/actions');
-var Utils = require('../helpers/utils');
+var TTLSUtils = require('../helpers/ttlsUtils');
 var request = require('request');
 var _accessToken = null;
 
@@ -9,12 +9,12 @@ exports.protectedTTLSGetApplicationsByFileNumber = function(args, res, rest) {
   var fileNumber = args.swagger.params.fileNumber.value;
   defaultLog.info('Searching TTLS API for Crown Land FileNumber:', fileNumber);
   return new Promise(function(r, j) {
-    return Utils.loginWebADE()
+    return TTLSUtils.loginWebADE()
       .then(function(accessToken) {
         _accessToken = accessToken;
         defaultLog.info('TTLS API Logged in:', _accessToken);
         // fileNumber lookup
-        return Utils.getApplicationByFilenumber(_accessToken, fileNumber);
+        return TTLSUtils.getApplicationByFilenumber(_accessToken, fileNumber);
       })
       .then(r, j);
   })
@@ -30,12 +30,13 @@ exports.protectedTTLSGetApplicationsByFileNumber = function(args, res, rest) {
             return previousItem.then(function() {
               // return Actions.publish(currentItem);
               defaultLog.info('executing disp:', currentItem.DISPOSITION_TRANSACTION_SID);
-              return Utils.getApplicationByDispositionID(_accessToken, currentItem.DISPOSITION_TRANSACTION_SID).then(
-                function(appData) {
-                  allApps.push(appData);
-                  return appData;
-                }
-              );
+              return TTLSUtils.getApplicationByDispositionID(
+                _accessToken,
+                currentItem.DISPOSITION_TRANSACTION_SID
+              ).then(function(appData) {
+                allApps.push(appData);
+                return appData;
+              });
             });
           }, Promise.resolve());
         })
@@ -56,12 +57,12 @@ exports.protectedTTLSGetApplicationByDisp = function(args, res, rest) {
   var dtId = args.swagger.params.dtId.value;
   defaultLog.info('Searching TTLS API for Disposition Transaction ID:', dtId);
   return new Promise(function(resolve, reject) {
-    return Utils.loginWebADE()
+    return TTLSUtils.loginWebADE()
       .then(function(accessToken) {
         _accessToken = accessToken;
         defaultLog.info('TTLS API Logged in:', _accessToken);
         // Disp lookup
-        return Utils.getApplicationByDispositionID(_accessToken, dtId);
+        return TTLSUtils.getApplicationByDispositionID(_accessToken, dtId);
       })
       .then(resolve, reject);
   })
