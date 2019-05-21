@@ -1,22 +1,27 @@
 'use strict';
 
-var app = require('express')();
-var fs = require('fs');
-var uploadDir = process.env.UPLOAD_DIRECTORY || './uploads/';
-var hostname = process.env.API_HOSTNAME || 'localhost:3000';
-var swaggerTools = require('swagger-tools');
-var YAML = require('yamljs');
-var swaggerConfig = YAML.load('./api/swagger/swagger.yaml');
-var mongoose = require('mongoose');
-var bodyParser = require('body-parser');
+const app = require('express')();
+const fs = require('fs');
+const swaggerTools = require('swagger-tools');
+const YAML = require('yamljs');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 const moment = require('moment');
+
+const swaggerConfig = YAML.load('./api/swagger/swagger.yaml');
+const uploadDir = process.env.UPLOAD_DIRECTORY || './uploads/';
+const hostname = process.env.API_HOSTNAME || 'localhost:3000';
+const logLevel =
+  (['info', 'warn', 'error', 'verbose', 'debug', 'silly'].includes(process.env.LOG_LEVEL) && process.env.LOG_LEVEL) ||
+  'silly';
 
 // winston logger needs to be created before any local classes that use the logger are loaded.
 const winston = require('winston');
+winston.config.npm.levels;
 const defaultLog = winston.loggers.add('default', {
   transports: [
     new winston.transports.Console({
-      level: 'silly',
+      level: logLevel,
       formatter: info => {
         return `${moment().format('DD-MM-YYYY HH:mm:ss')} ${info.level}: ${info.message}`;
       }
@@ -24,15 +29,15 @@ const defaultLog = winston.loggers.add('default', {
   ]
 });
 
-var auth = require('./api/helpers/auth');
+const auth = require('./api/helpers/auth');
 
-var dbConnection =
+const dbConnection =
   'mongodb://' +
   (process.env.MONGODB_SERVICE_HOST || process.env.DB_1_PORT_27017_TCP_ADDR || 'localhost') +
   '/' +
   (process.env.MONGODB_DATABASE || 'nrts-dev');
-var db_username = process.env.MONGODB_USERNAME || '';
-var db_password = process.env.MONGODB_PASSWORD || '';
+const db_username = process.env.MONGODB_USERNAME || '';
+const db_password = process.env.MONGODB_PASSWORD || '';
 
 // Increase postbody sizing
 app.use(bodyParser.json({ limit: '10mb', extended: true }));
@@ -72,7 +77,7 @@ swaggerTools.initializeMiddleware(swaggerConfig, function(middleware) {
     })
   );
 
-  var routerConfig = {
+  const routerConfig = {
     controllers: './api/controllers',
     useStubs: false
   };
@@ -91,7 +96,7 @@ swaggerTools.initializeMiddleware(swaggerConfig, function(middleware) {
     defaultLog.info("Couldn't create upload folder:", e);
   }
   // Load up DB
-  var options = {
+  const options = {
     user: db_username,
     pass: db_password,
     reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
