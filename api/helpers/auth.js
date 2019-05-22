@@ -9,10 +9,11 @@ var JWKSURI =
 var JWT_SIGN_EXPIRY = process.env.JWT_SIGN_EXPIRY || '1440'; // 24 hours in minutes.
 var SECRET = process.env.SECRET || 'defaultSecret';
 var KEYCLOAK_ENABLED = process.env.KEYCLOAK_ENABLED || 'true';
-var defaultLog = require('winston').loggers.get('default');
+var defaultLog = require('./logger');
 
 exports.verifyToken = function(req, authOrSecDef, token, callback) {
-  defaultLog.info('verifying token', token);
+  defaultLog.info('verifying token');
+  defaultLog.debug('token:', token);
   // scopes/roles defined for the current endpoint
   var currentScopes = req.swagger.operation['x-security-scopes'];
   function sendError() {
@@ -62,7 +63,8 @@ function _verifySecret(currentScopes, tokenString, secret, req, callback, sendEr
 
     // check if the JWT was verified correctly
     if (verificationError == null && Array.isArray(currentScopes) && decodedToken && decodedToken.realm_access.roles) {
-      defaultLog.info('JWT decoded:', decodedToken);
+      defaultLog.info('JWT decoded.');
+      defaultLog.debug('JWT token:', decodedToken);
 
       // check if the role is valid for this endpoint
       var roleMatch = currentScopes.some(r => decodedToken.realm_access.roles.indexOf(r) >= 0);

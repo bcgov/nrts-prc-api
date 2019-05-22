@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var defaultLog = require('winston').loggers.get('default');
+var defaultLog = require('../helpers/logger');
 var mongoose = require('mongoose');
 var Actions = require('../helpers/actions');
 var Utils = require('../helpers/utils');
@@ -154,7 +154,7 @@ exports.protectedPut = function(args, res, next) {
   var commentperiod = require('mongoose').model('CommentPeriod');
   commentperiod.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
       return Actions.sendResponse(res, 200, o);
     } else {
       defaultLog.warn("Couldn't find that object!");
@@ -171,7 +171,7 @@ exports.protectedDelete = function(args, res, next) {
   var commentperiod = require('mongoose').model('CommentPeriod');
   commentperiod.findOne({ _id: objId, isDeleted: false }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
 
       // Set the deleted flag.
       Actions.delete(o).then(
@@ -200,7 +200,7 @@ exports.protectedPublish = function(args, res, next) {
   var commentperiod = require('mongoose').model('CommentPeriod');
   commentperiod.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
 
       // Add public to the tag of this obj.
       Actions.publish(o).then(
@@ -226,7 +226,7 @@ exports.protectedUnPublish = function(args, res, next) {
   var commentperiod = require('mongoose').model('CommentPeriod');
   commentperiod.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
 
       // Remove public to the tag of this obj.
       Actions.unPublish(o).then(

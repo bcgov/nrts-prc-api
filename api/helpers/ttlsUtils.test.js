@@ -1,30 +1,37 @@
-const TTLSUtils = require('../../helpers/ttlsUtils');
+const TTLSUtils = require('./ttlsUtils');
 const nock = require('nock');
 var _ = require('lodash');
 
 describe('TTLSUtils', () => {
-  const nrsApiDomain = 'https://api.nrs.gov.bc.ca';
-  const loginPath = '/oauth2/v1/oauth/token?grant_type=client_credentials&disableDeveloperFilter=true';
-  const headers = {
-    reqheaders: {
-      authorization: 'Basic VFRMUy1FWFQ6eA=='
+  const webADENock = {
+    domain: 'https://api.nrs.gov.bc.ca',
+    path: '/oauth2/v1/oauth/token?grant_type=client_credentials&disableDeveloperFilter=true',
+    headers: {
+      reqheaders: {
+        authorization: x => {
+          return (x && true) || false;
+        }
+      }
+    },
+    success_response: {
+      access_token: 'ACCESS_TOKEN',
+      token_type: 'bearer',
+      expires_in: 43199
+    },
+    error_response: {
+      msg: 'An error occurred!'
     }
   };
 
   describe('loginWebADE', () => {
-    const nrsApi = nock(nrsApiDomain, headers);
-    const webAdeResponse = {
-      access_token: 'ACCESS_TOKEN',
-      token_type: 'bearer',
-      expires_in: 43199
-    };
+    const webADEApi = nock(webADENock.domain, webADENock.headers);
 
     describe('When the webADE call returns successfully', () => {
       beforeEach(() => {
-        nrsApi.get(loginPath).reply(200, webAdeResponse);
+        webADEApi.get(webADENock.path).reply(200, webADENock.success_response);
       });
 
-      test('returns the access token', done => {
+      it('returns the access token', done => {
         TTLSUtils.loginWebADE().then(response => {
           expect(response).toEqual('ACCESS_TOKEN');
           done();
@@ -33,15 +40,13 @@ describe('TTLSUtils', () => {
     });
 
     describe('When the webADE call returns with a non-200 status code', () => {
-      let webADEErrorResponse = {
-        msg: 'Beep boop, something went wrong'
-      };
       beforeEach(() => {
-        nrsApi.get(loginPath).reply(400, webADEErrorResponse);
+        webADEApi.get(webADENock.path).reply(400, webADENock.error_response);
       });
 
-      test('rejects the promise', done => {
+      it('rejects the promise', done => {
         TTLSUtils.loginWebADE().catch(response => {
+          expect(response).toEqual({ code: 400 });
           done();
         });
       });
@@ -49,7 +54,7 @@ describe('TTLSUtils', () => {
   });
 
   describe('getApplicationByFilenumber', () => {
-    const nrsApi = nock(nrsApiDomain);
+    const webADEApi = nock(webADENock.domain);
     const accessToken = 'ACCESS_TOKEN';
     const fileNumber = '99999';
 
@@ -137,10 +142,10 @@ describe('TTLSUtils', () => {
 
     describe('When the api call returns successfully', () => {
       beforeEach(() => {
-        nrsApi.get(fileSearchPath).reply(200, ttlsApiResponse);
+        webADEApi.get(fileSearchPath).reply(200, ttlsApiResponse);
       });
 
-      test('returns an application with the right tenure types and purposes', done => {
+      it('returns an application with the right tenure types and purposes', done => {
         TTLSUtils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
           expect(response.length).toEqual(1);
           let firstApplication = response[0];
@@ -153,7 +158,7 @@ describe('TTLSUtils', () => {
         });
       });
 
-      test('returns an application with the expected tenure status, stage, and location attrs', done => {
+      it('returns an application with the expected tenure status, stage, and location attrs', done => {
         TTLSUtils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
           expect(response.length).toEqual(1);
           let firstApplication = response[0];
@@ -166,7 +171,7 @@ describe('TTLSUtils', () => {
         });
       });
 
-      test('returns an application with the correct additional attributes', done => {
+      it('returns an application with the correct additional attributes', done => {
         TTLSUtils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
           expect(response.length).toEqual(1);
           let firstApplication = response[0];
@@ -181,7 +186,7 @@ describe('TTLSUtils', () => {
   });
 
   describe('getApplicationByDispositionID', () => {
-    const nrsApi = nock(nrsApiDomain);
+    const webADEApi = nock(webADENock.domain);
     const accessToken = 'ACCESS_TOKEN';
     const dispId = '666666';
     const individualPartyObj = {
@@ -304,10 +309,10 @@ describe('TTLSUtils', () => {
 
     describe('When the api call returns successfully', () => {
       beforeEach(() => {
-        nrsApi.get(landUseAppSearchPath).reply(200, ttlsApiResponse);
+        webADEApi.get(landUseAppSearchPath).reply(200, ttlsApiResponse);
       });
 
-      test('returns an application with the right tenure types and purposes', done => {
+      it('returns an application with the right tenure types and purposes', done => {
         TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(response => {
           let firstApplication = response;
           expect(firstApplication.TENURE_PURPOSE).toEqual('I have a very important purpose in life!');
@@ -319,7 +324,7 @@ describe('TTLSUtils', () => {
         });
       });
 
-      test('returns an application with the expected tenure status, stage, and location attrs', done => {
+      it('returns an application with the expected tenure status, stage, and location attrs', done => {
         TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(response => {
           let firstApplication = response;
 
@@ -331,7 +336,7 @@ describe('TTLSUtils', () => {
         });
       });
 
-      test('returns an application with the correct additional attributes', done => {
+      it('returns an application with the correct additional attributes', done => {
         TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(response => {
           let firstApplication = response;
           expect(firstApplication.RESPONSIBLE_BUSINESS_UNIT).toEqual('Super evil corporation');
@@ -342,7 +347,7 @@ describe('TTLSUtils', () => {
         });
       });
 
-      test('sets the statusHistoryEffectiveDate', done => {
+      it('sets the statusHistoryEffectiveDate', done => {
         TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(response => {
           expect(response.statusHistoryEffectiveDate).toEqual(new Date(1527878179000));
 
@@ -352,7 +357,7 @@ describe('TTLSUtils', () => {
 
       describe('parcels', () => {
         // TODO: Figure out how to to properly test centroid and areaHectares calculation
-        test('sets the areaHectares and centroid properties', done => {
+        it('sets the areaHectares and centroid properties', done => {
           TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.areaHectares).toEqual(3.333);
             expect(application.centroid).not.toBeNull();
@@ -361,7 +366,7 @@ describe('TTLSUtils', () => {
           });
         });
 
-        test('it adds parcels to the application', done => {
+        it('it adds parcels to the application', done => {
           TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels).not.toBeNull();
             expect(application.parcels.length).toEqual(1);
@@ -372,7 +377,7 @@ describe('TTLSUtils', () => {
           });
         });
 
-        test('it sets the feature tenure properties correctly on the parcel', done => {
+        it('it sets the feature tenure properties correctly on the parcel', done => {
           TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels.length).toEqual(1);
             const firstParcel = application.parcels[0];
@@ -386,7 +391,7 @@ describe('TTLSUtils', () => {
           });
         });
 
-        test('it sets the feature properties correctly on the parcel', done => {
+        it('it sets the feature properties correctly on the parcel', done => {
           TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels.length).toEqual(1);
             const firstParcel = application.parcels[0];
@@ -400,7 +405,7 @@ describe('TTLSUtils', () => {
           });
         });
 
-        test('sets the crs properties name', done => {
+        it('sets the crs properties name', done => {
           TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels.length).toEqual(1);
             const firstParcel = application.parcels[0];
@@ -413,7 +418,7 @@ describe('TTLSUtils', () => {
         });
 
         // Not sure how to go about testing this, so I'm just testing that something gets set.
-        test('sets the geometry', done => {
+        it('sets the geometry', done => {
           TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
             expect(application.parcels.length).toEqual(1);
             const firstParcel = application.parcels[0];
@@ -429,7 +434,7 @@ describe('TTLSUtils', () => {
 
       describe('interestedParties', () => {
         describe('with an individual party type object', () => {
-          test('it adds the individual party object to the interestedParties array', done => {
+          it('it adds the individual party object to the interestedParties array', done => {
             TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
               expect(application.interestedParties.length).toEqual(2);
               const individualParty = _.find(application.interestedParties, { interestedPartyType: 'I' });
@@ -443,7 +448,7 @@ describe('TTLSUtils', () => {
         });
 
         describe('with an organization party type object', () => {
-          test('it adds the organization party object to the interestedParties array', done => {
+          it('it adds the organization party object to the interestedParties array', done => {
             TTLSUtils.getApplicationByDispositionID(accessToken, dispId).then(application => {
               expect(application.interestedParties.length).toEqual(2);
               const orgParty = _.find(application.interestedParties, { interestedPartyType: 'O' });
@@ -460,13 +465,13 @@ describe('TTLSUtils', () => {
 
     describe('when the api call returns with a non-200 status code', () => {
       beforeEach(() => {
-        nrsApi.get(landUseAppSearchPath).reply(500, { error: 'something went wrong' });
+        webADEApi.get(landUseAppSearchPath).reply(500, { error: 'something went wrong' });
       });
 
-      test('it rejects with an error object', done => {
+      it('it rejects with an error object', done => {
         TTLSUtils.getApplicationByDispositionID(accessToken, dispId).catch(error => {
           expect(error).not.toBeNull();
-          expect(error.statusCode).toEqual(500);
+          expect(error.code).toEqual(500);
 
           done();
         });

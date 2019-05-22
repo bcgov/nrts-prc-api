@@ -1,6 +1,6 @@
 var auth = require('../helpers/auth');
 var _ = require('lodash');
-var defaultLog = require('winston').loggers.get('default');
+var defaultLog = require('../helpers/logger');
 var mongoose = require('mongoose');
 var Actions = require('../helpers/actions');
 var Utils = require('../helpers/utils');
@@ -85,7 +85,7 @@ exports.protectedPut = function(args, res, next) {
   var User = require('mongoose').model('User');
   User.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
       return Actions.sendResponse(res, 200, o);
     } else {
       defaultLog.warn("Couldn't find that object!");

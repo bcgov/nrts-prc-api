@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var defaultLog = require('winston').loggers.get('default');
+var defaultLog = require('../helpers/logger');
 var mongoose = require('mongoose');
 var mime = require('mime-types');
 var Actions = require('../helpers/actions');
@@ -327,7 +327,7 @@ exports.protectedDelete = function(args, res, next) {
   var Document = require('mongoose').model('Document');
   Document.findOne({ _id: objId, isDeleted: false }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
 
       // Set the deleted flag.
       Actions.delete(o).then(
@@ -354,7 +354,7 @@ exports.protectedPublish = function(args, res, next) {
   var Document = require('mongoose').model('Document');
   Document.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
 
       // Add public to the tag of this obj.
       Actions.publish(o).then(
@@ -380,7 +380,7 @@ exports.protectedUnPublish = function(args, res, next) {
   var Document = require('mongoose').model('Document');
   Document.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
 
       // Remove public to the tag of this obj.
       Actions.unPublish(o).then(

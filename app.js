@@ -6,28 +6,13 @@ const swaggerTools = require('swagger-tools');
 const YAML = require('yamljs');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const moment = require('moment');
 
 const swaggerConfig = YAML.load('./api/swagger/swagger.yaml');
 const uploadDir = process.env.UPLOAD_DIRECTORY || './uploads/';
 const hostname = process.env.API_HOSTNAME || 'localhost:3000';
-const logLevel =
-  (['info', 'warn', 'error', 'verbose', 'debug', 'silly'].includes(process.env.LOG_LEVEL) && process.env.LOG_LEVEL) ||
-  'silly';
 
 // winston logger needs to be created before any local classes that use the logger are loaded.
-const winston = require('winston');
-winston.config.npm.levels;
-const defaultLog = winston.loggers.add('default', {
-  transports: [
-    new winston.transports.Console({
-      level: logLevel,
-      formatter: info => {
-        return `${moment().format('DD-MM-YYYY HH:mm:ss')} ${info.level}: ${info.message}`;
-      }
-    })
-  ]
-});
+const defaultLog = require('./api/helpers/logger');
 
 const auth = require('./api/helpers/auth');
 

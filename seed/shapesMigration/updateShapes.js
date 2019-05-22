@@ -13,14 +13,7 @@
  */
 
 // winston logger needs to be created before any local classes that use the logger are loaded.
-const winston = require('winston');
-const defaultLog = winston.loggers.add('default', {
-  transports: [
-    new winston.transports.Console({
-      level: 'silly'
-    })
-  ]
-});
+const defaultLog = require('../../api/helpers/logger');
 
 var Promise = require('es6-promise').Promise;
 var _ = require('lodash');
