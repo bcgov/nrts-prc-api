@@ -46,7 +46,7 @@ exports.protectedTTLSGetApplicationsByFileNumber = function(args, res, rest) {
         });
     })
     .catch(function(err) {
-      defaultLog.error('Error in API:', JSON.stringify(err));
+      defaultLog.error('protectedTTLSGetApplicationsByFileNumber:', JSON.stringify(err));
       return Actions.sendResponse(res, null, err);
     });
 };
@@ -69,7 +69,7 @@ exports.protectedTTLSGetApplicationByDisp = function(args, res, rest) {
       return Actions.sendResponse(res, 200, data);
     })
     .catch(function(err) {
-      defaultLog.error('Error in API:', JSON.stringify(err));
+      defaultLog.error('protectedTTLSGetApplicationByDisp:', JSON.stringify(err));
       return Actions.sendResponse(res, null, err);
     });
 };

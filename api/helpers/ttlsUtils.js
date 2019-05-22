@@ -16,7 +16,7 @@ const defaultLog = require('./logger');
 let tantalisAPI = process.env.TTLS_API_ENDPOINT || 'https://api.nrs.gov.bc.ca/ttls-api/v1/';
 let webADEAPI = process.env.WEBADE_AUTH_ENDPOINT || 'https://api.nrs.gov.bc.ca/oauth2/v1/';
 let username = process.env.WEBADE_USERNAME || 'TTLS-EXT';
-let password = process.env.WEBADE_PASSWORD || 'X';
+let password = process.env.WEBADE_PASSWORD;
 
 // WebADE Login
 exports.loginWebADE = function() {
@@ -39,6 +39,7 @@ exports.loginWebADE = function() {
         } else {
           try {
             var obj = JSON.parse(body);
+            defaultLog.debug('o:', JSON.stringify(obj));
             if (obj && obj.access_token) {
               resolve(obj.access_token);
             } else {
@@ -75,12 +76,10 @@ exports.getApplicationByFilenumber = function(accessToken, clFile) {
         } else {
           try {
             var obj = JSON.parse(body);
-            // defaultLog.info("obj:", obj);
+            defaultLog.debug('o:', JSON.stringify(obj));
             var applications = [];
             if (obj && obj.elements && obj.elements.length > 0) {
-              // defaultLog.info("obj.elements:", obj.elements);
               for (let app of obj.elements) {
-                // defaultLog.info("app:", app);
                 var application = {};
                 application.TENURE_PURPOSE = app.purposeCode['description'];
                 application.TENURE_SUBPURPOSE = app.purposeCode.subPurposeCodes[0]['description'];
@@ -135,6 +134,7 @@ exports.getApplicationByDispositionID = function(accessToken, disp) {
         } else {
           try {
             var obj = JSON.parse(body);
+            defaultLog.debug('o:', JSON.stringify(obj));
             var application = {};
             if (obj) {
               // Setup the application object.
@@ -263,12 +263,12 @@ exports.getAllApplicationIDs = function(accessToken, filterParams = {}) {
           reject({ code: (res && res.statusCode) || null });
         } else {
           try {
-            var response = JSON.parse(body);
-
+            var obj = JSON.parse(body);
+            defaultLog.debug('o:', JSON.stringify(obj));
             var applicationIDs = [];
-            _.forEach(response.elements, function(obj) {
-              if (obj) {
-                applicationIDs.push(obj.landUseApplicationId);
+            _.forEach(obj.elements, function(element) {
+              if (element) {
+                applicationIDs.push(element.landUseApplicationId);
               }
             });
 

@@ -129,5 +129,5 @@ login(username, password)
     stream.pipe(csvStream);
   })
   .catch(function(err) {
-    console.log('ERR:', err);
+    console.log('login:', err);
   });

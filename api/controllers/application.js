@@ -53,6 +53,7 @@ exports.publicHead = function(args, res, next) {
     try {
       query = addStandardQueryFilters(query, args);
     } catch (error) {
+      defaultLog.error('application publicHead:', error);
       return Actions.sendResponse(res, 400, { error: error.message });
     }
   }
@@ -85,7 +86,7 @@ exports.publicHead = function(args, res, next) {
           }
         })
         .catch(function(err) {
-          defaultLog.error('Error in runDataQuery:', err);
+          defaultLog.error('application publicHead runDataQuery:', err);
           return Actions.sendResponse(res, 400, err);
         });
     },
@@ -116,6 +117,7 @@ exports.publicGet = function(args, res, next) {
     try {
       query = addStandardQueryFilters(query, args);
     } catch (error) {
+      defaultLog.error('application publicGet:', error);
       return Actions.sendResponse(res, 400, { error: error.message });
     }
   }
@@ -142,7 +144,7 @@ exports.publicGet = function(args, res, next) {
           return Actions.sendResponse(res, 200, data);
         })
         .catch(function(err) {
-          defaultLog.error('Error in runDataQuery:', err);
+          defaultLog.error('application publicGet runDataQuery:', err);
           return Actions.sendResponse(res, 400, err);
         });
     },
@@ -171,6 +173,7 @@ exports.protectedGet = function(args, res, next) {
     try {
       query = addStandardQueryFilters(query, args);
     } catch (error) {
+      defaultLog.error('application protectedGet:', error);
       return Actions.sendResponse(res, 400, { error: error.message });
     }
   }
@@ -197,7 +200,7 @@ exports.protectedGet = function(args, res, next) {
       return Actions.sendResponse(res, 200, data);
     })
     .catch(function(err) {
-      defaultLog.error('Error in runDataQuery:', err);
+      defaultLog.error('application protectedGet runDataQuery:', err);
       return Actions.sendResponse(res, 400, err);
     });
 };
@@ -250,7 +253,7 @@ exports.protectedHead = function(args, res, next) {
       }
     })
     .catch(function(err) {
-      defaultLog.error('Error in runDataQuery:', err);
+      defaultLog.error('application protectedHead runDataQuery:', err);
       return Actions.sendResponse(res, 400, err);
     });
 };
@@ -262,7 +265,7 @@ exports.protectedDelete = function(args, res, next) {
   var Application = mongoose.model('Application');
   Application.findOne({ _id: appId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
 
       // Set the deleted flag.
       Actions.delete(o).then(
@@ -420,7 +423,7 @@ exports.protectedPost = function(args, res, next) {
           });
       })
       .catch(function(err) {
-        defaultLog.error('Error in API:', err);
+        defaultLog.error('application protectedPost:', err);
         return Actions.sendResponse(res, 400, err);
       });
   });
@@ -440,7 +443,7 @@ exports.protectedPut = function(args, res, next) {
   var Application = require('mongoose').model('Application');
   Application.findOneAndUpdate({ _id: objId }, obj, { upsert: false, new: true }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
       return Actions.sendResponse(res, 200, o);
     } else {
       defaultLog.warn("Couldn't find that object!");
@@ -457,7 +460,7 @@ exports.protectedPublish = function(args, res, next) {
   var Application = require('mongoose').model('Application');
   Application.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
 
       // Go through the feature collection and publish the corresponding features.
       doFeaturePubUnPub('publish', objId)
@@ -489,7 +492,7 @@ exports.protectedUnPublish = function(args, res, next) {
   var Application = require('mongoose').model('Application');
   Application.findOne({ _id: objId }, function(err, o) {
     if (o) {
-      defaultLog.info('o:', o);
+      defaultLog.debug('o:', JSON.stringify(o));
 
       // Go through the feature collection and publish the corresponding features.
       doFeaturePubUnPub('unpublish', objId)

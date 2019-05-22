@@ -1,6 +1,4 @@
-/* eslint-disable */
-
-const SpacialUtils = require('../../helpers/spatialUtils');
+const SpacialUtils = require('./spatialUtils');
 
 describe('SpacialUtils', () => {
   describe('getGeometryArray', () => {
