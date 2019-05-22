@@ -7,7 +7,7 @@
 var _ = require('lodash');
 var mongoose = require('mongoose');
 var clamav = require('clamav.js');
-const defaultLog = require('winston').loggers.get('default');
+const defaultLog = require('./logger');
 
 var _serviceHost = process.env.CLAMAV_SERVICE_HOST || '127.0.0.1';
 var _servicePort = process.env.CLAMAV_SERVICE_PORT || '3310';

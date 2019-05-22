@@ -1,4 +1,4 @@
-var defaultLog = require('winston').loggers.get('default');
+var defaultLog = require('../helpers/logger');
 var Actions = require('../helpers/actions');
 var TTLSUtils = require('../helpers/ttlsUtils');
 var _accessToken = null;

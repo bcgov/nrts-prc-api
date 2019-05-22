@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var defaultLog = require('winston').loggers.get('default');
+var defaultLog = require('../helpers/logger');
 var mongoose = require('mongoose');
 var Actions = require('../helpers/actions');
 var Utils = require('../helpers/utils');
