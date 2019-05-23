@@ -1,5 +1,5 @@
 var auth = require('../helpers/auth');
-var defaultLog = require('../helpers/logger');
+var defaultLog = require('../helpers/logger')('login');
 
 exports.loginOptions = function(args, res, next) {
   res.status(200).send();

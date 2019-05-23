@@ -1,6 +1,6 @@
 var auth = require('../helpers/auth');
 var _ = require('lodash');
-var defaultLog = require('../helpers/logger');
+var defaultLog = require('../helpers/logger')('user');
 var mongoose = require('mongoose');
 var Actions = require('../helpers/actions');
 var Utils = require('../helpers/utils');

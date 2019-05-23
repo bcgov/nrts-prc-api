@@ -11,7 +11,7 @@ const request = require('request');
 const turf = require('@turf/turf');
 const helpers = require('@turf/helpers');
 const spatialUtils = require('./spatialUtils');
-const defaultLog = require('./logger');
+const defaultLog = require('./logger')('ttlsUtils');
 
 let tantalisAPI = process.env.TTLS_API_ENDPOINT || 'https://api.nrs.gov.bc.ca/ttls-api/v1/';
 let webADEAPI = process.env.WEBADE_AUTH_ENDPOINT || 'https://api.nrs.gov.bc.ca/oauth2/v1/';

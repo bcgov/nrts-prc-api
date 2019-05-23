@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var defaultLog = require('../helpers/logger');
+var defaultLog = require('../helpers/logger')('document');
 var mongoose = require('mongoose');
 var mime = require('mime-types');
 var Actions = require('../helpers/actions');

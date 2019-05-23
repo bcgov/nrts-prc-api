@@ -1,4 +1,4 @@
-var defaultLog = require('../helpers/logger');
+var defaultLog = require('../helpers/logger')('search');
 var Actions = require('../helpers/actions');
 var TTLSUtils = require('../helpers/ttlsUtils');
 var _accessToken = null;
@@ -40,8 +40,7 @@ exports.protectedTTLSGetApplicationsByFileNumber = function(args, res, rest) {
         })
         .then(function() {
           // All done with promises in the array, return to the caller.
-          defaultLog.info('------------------------done with promises------------------------');
-          defaultLog.info(allApps);
+          defaultLog.debug('search results: ', JSON.stringify(allApps));
           return Actions.sendResponse(res, 200, allApps);
         });
     })

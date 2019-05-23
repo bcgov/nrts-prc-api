@@ -13,7 +13,7 @@
  */
 
 // winston logger needs to be created before any local classes that use the logger are loaded.
-const defaultLog = require('../../api/helpers/logger');
+const defaultLog = require('../../api/helpers/logger')('updateShapes');
 
 var Promise = require('es6-promise').Promise;
 var _ = require('lodash');
