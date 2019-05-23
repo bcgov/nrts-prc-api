@@ -12,8 +12,7 @@ const uploadDir = process.env.UPLOAD_DIRECTORY || './uploads/';
 const hostname = process.env.API_HOSTNAME || 'localhost:3000';
 
 // winston logger needs to be created before any local classes that use the logger are loaded.
-const defaultLog = require('./api/helpers/logger');
-
+const defaultLog = require('./api/helpers/logger')('app');
 const auth = require('./api/helpers/auth');
 
 const dbConnection =

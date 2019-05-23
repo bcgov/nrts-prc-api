@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-const defaultLog = require('./logger');
+const defaultLog = require('./logger')('models');
 var _ = require('lodash');
 
 /**

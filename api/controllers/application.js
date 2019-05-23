@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var defaultLog = require('../helpers/logger');
+var defaultLog = require('../helpers/logger')('application');
 var mongoose = require('mongoose');
 var qs = require('qs');
 var Actions = require('../helpers/actions');

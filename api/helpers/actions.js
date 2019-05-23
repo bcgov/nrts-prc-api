@@ -1,6 +1,6 @@
 'use strict';
-var _ = require('lodash');
-var defaultLog = require('./logger');
+const _ = require('lodash');
+const defaultLog = require('./logger')('actions');
 
 exports.publish = function(o) {
   return new Promise(function(resolve, reject) {
