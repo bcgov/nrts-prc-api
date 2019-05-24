@@ -43,7 +43,7 @@ exports.publicGet = function(args, res, next) {
   });
 };
 exports.protectedGet = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info('args.swagger.params:', JSON.stringify(args.swagger.operation['x-security-scopes']));
 
   var query = {};
   // Build match query if on featureId route
@@ -88,7 +88,7 @@ exports.protectedGet = function(args, res, next) {
 
 exports.protectedDelete = function(args, res, next) {
   defaultLog.info('Deleting a Feature(s)');
-  defaultLog.info('args.swagger.params:', args.swagger.operation['x-security-scopes']);
+  defaultLog.info('args.swagger.params:', JSON.stringify(args.swagger.operation['x-security-scopes']));
 
   var Feature = mongoose.model('Feature');
   var query = {};
