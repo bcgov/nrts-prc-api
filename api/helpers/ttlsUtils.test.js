@@ -5,7 +5,7 @@ var _ = require('lodash');
 describe('TTLSUtils', () => {
   const webADENock = {
     domain: 'https://api.nrs.gov.bc.ca',
-    path: '/oauth2/v1/oauth/token?grant_type=client_credentials&disableDeveloperFilter=true',
+    path: '/oauth2/v1/oauth/token?grant_type=client_credentials&disableDeveloperFilter=true&scope=TTLS.*',
     headers: {
       reqheaders: {
         authorization: x => {

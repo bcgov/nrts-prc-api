@@ -24,7 +24,7 @@ exports.loginWebADE = function() {
   return new Promise(function(resolve, reject) {
     request.get(
       {
-        url: webADEAPI + 'oauth/token?grant_type=client_credentials&disableDeveloperFilter=true',
+        url: webADEAPI + 'oauth/token?grant_type=client_credentials&disableDeveloperFilter=true&scope=TTLS.*',
         headers: {
           Authorization: 'Basic ' + Buffer.from(username + ':' + password).toString('base64')
         }
