@@ -13,6 +13,7 @@ module.exports = require('../models')('Feature', {
     INTRID_SID: { type: Number, default: 0 },
     TENURE_STAGE: { type: String, default: '' },
     TENURE_STATUS: { type: String, default: '' },
+    TENURE_REASON: { type: String, default: '' },
     TENURE_TYPE: { type: String, default: '' },
     TENURE_SUBTYPE: { type: String, default: '' },
     TENURE_PURPOSE: { type: String, default: '' },
