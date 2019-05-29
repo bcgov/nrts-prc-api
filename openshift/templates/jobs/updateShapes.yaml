@@ -1,4 +1,4 @@
-apiVersion: batch/v2alpha1
+apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   labels:
@@ -38,6 +38,14 @@ spec:
                 - name: JSON_PAYLOAD_FAIL
                   value: '{"text":"Shapes Import Job for nrts-prc-prod Failed!"}'
                 - name: NOTIFICATION_URL
+                  value: ''
+                - name: WEBADE_AUTH_ENDPOINT
+                  value: ''
+                - name: WEBADE_USERNAME
+                  value: ''
+                - name: WEBADE_PASSWORD
+                  value: ''
+                - name: TTLS_API_ENDPOINT
                   value: ''
               image: docker-registry.default.svc:5000/nrts-prc-tools/nrts-prc-api:master
               command:

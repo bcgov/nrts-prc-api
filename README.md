@@ -95,6 +95,33 @@ This project uses npm package `swagger-tools` via `./app.js` to automatically ge
 
 Recommend reviewing the [Open API Specification](https://swagger.io/docs/specification/about/) before making any changes to the `swagger.yaml` file.
 
+# Logging
+
+A centralized logger has been created (see `api/helpers/logger.js`).
+
+## Logger copnfiguration
+The loggers log level can be configured via an environment variable: `LOG_LEVEL`
+
+Set this variable to one of: `error`, `warn`, `info`, `debug`
+
+Default value: `info`
+
+## Instantiating the logger in your class/file
+```
+const log = require('./logger)('a meaningful label, typically the class name`)
+```
+
+## Using the logger
+```
+log.error('Used when logging unexpected errors.  Generally these will only exist in catch() blocks');
+
+log.warn('Used when logging soft errors.  For example, if your request finished but returned a 404 not found');
+
+log.info('General log messages about the state of the application');
+
+log.debug('Useful for logging objects and other developer data', JSON.stringify(myObject));
+```
+
 # Testing
 
 ## Info

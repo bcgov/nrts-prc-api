@@ -131,6 +131,9 @@ definitions:
       status:
         type: string
         example: "ACCEPTED"
+      reason:
+        type: string
+        example: "OFFER NOT ACCEPTED"
       subpurpose:
         type: string
         example: "MARINA"
@@ -170,6 +173,7 @@ definitions:
       - publishDate
       - purpose
       - status
+      - reason
       - subpurpose
       - subtype
       - tantalisID
@@ -729,6 +733,12 @@ paths:
           required: false
           description: "Status(es) that Applications must match"
         - in: query
+          collectionFormat: multi
+          name: reason
+          type: string
+          required: false
+          description: "Reason(s) that Applications must match"
+        - in: query
           name: type
           type: string
           required: false
@@ -849,6 +859,12 @@ paths:
           type: string
           required: false
           description: "Status(es) that Applications must match"
+        - in: query
+          collectionFormat: multi
+          name: reason
+          type: string
+          required: false
+          description: "Reason(s) that Applications must match"
         - in: query
           name: type
           type: string
@@ -1291,6 +1307,12 @@ paths:
           required: false
           description: "Status(es) that Applications must match"
         - in: query
+          collectionFormat: multi
+          name: reason
+          type: string
+          required: false
+          description: "Reason(s) that Applications must match"
+        - in: query
           name: type
           type: string
           required: false
@@ -1419,6 +1441,12 @@ paths:
           type: string
           required: false
           description: "Status(es) that Applications must match"
+        - in: query
+          collectionFormat: multi
+          name: reason
+          type: string
+          required: false
+          description: "Reason(s) that Applications must match"
         - in: query
           name: type
           type: string

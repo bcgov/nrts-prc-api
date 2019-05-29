@@ -18,6 +18,7 @@ module.exports = require('../models')('Application', {
   publishDate: { type: Date },
   purpose: { type: String },
   status: { type: String },
+  reason: { type: String },
   subpurpose: { type: String },
   subtype: { type: String },
   tantalisID: { type: Number, default: 0 },
