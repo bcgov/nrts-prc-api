@@ -55,13 +55,33 @@ exports.loginWebADE = function() {
   });
 };
 
-// Tantalis API
-exports.getApplicationByFilenumber = function(accessToken, clFile) {
+/**
+ * Fetches all applications by crown land file number.
+ *
+ * @param {string} accessToken Tantalis bearer token
+ * @param {string} dispositionID disposition ID
+ * @param {number} [pageNumber=1] page number
+ * @param {number} [pageRowCount=100] records per page
+ * @returns {Promise} promise that resolves with a single application
+ */
+exports.getApplicationByFilenumber = function(accessToken, clFile, pageNumber = 1, pageRowCount = 100) {
   return new Promise(function(resolve, reject) {
-    defaultLog.info('Looking up file:', tantalisAPI + 'landUseApplications?fileNumber=' + clFile);
+    defaultLog.info(
+      'Looking up file:',
+      tantalisAPI +
+        'landUseApplications' +
+        `?fileNumber=${clFile}` +
+        `&pageNumber=${pageNumber}` +
+        `&pageRowCount=${pageRowCount}`
+    );
     request.get(
       {
-        url: tantalisAPI + 'landUseApplications?fileNumber=' + clFile,
+        url:
+          tantalisAPI +
+          'landUseApplications' +
+          `?fileNumber=${clFile}` +
+          `&pageNumber=${pageNumber}` +
+          `&pageRowCount=${pageRowCount}`,
         auth: {
           bearer: accessToken
         }
@@ -110,16 +130,30 @@ exports.getApplicationByFilenumber = function(accessToken, clFile) {
 /**
  * Fetches an application by its disposition ID.
  *
- * @param {string} accessToken tantalis bearer token
- * @param {string} disp disposition ID
+ * @param {string} accessToken Tantalis bearer token
+ * @param {string} dispositionID disposition ID
+ * @param {number} [pageNumber=1] page number (optional)
+ * @param {number} [pageRowCount=100] records per page (optional)
  * @returns {Promise} promise that resolves with a single application
  */
-exports.getApplicationByDispositionID = function(accessToken, disp) {
+exports.getApplicationByDispositionID = function(accessToken, dispositionID, pageNumber = 1, pageRowCount = 100) {
   return new Promise(function(resolve, reject) {
-    defaultLog.info('Looking up disposition:', tantalisAPI + 'landUseApplications/' + disp);
+    defaultLog.info(
+      'Looking up disposition:',
+      tantalisAPI +
+        'landUseApplications/' +
+        dispositionID +
+        `&pageNumber=${pageNumber}` +
+        `&pageRowCount=${pageRowCount}`
+    );
     request.get(
       {
-        url: tantalisAPI + 'landUseApplications/' + disp,
+        url:
+          tantalisAPI +
+          'landUseApplications/' +
+          dispositionID +
+          `?pageNumber=${pageNumber}` +
+          `&pageRowCount=${pageRowCount}`,
         auth: {
           bearer: accessToken
         }
@@ -147,7 +181,7 @@ exports.getApplicationByDispositionID = function(accessToken, disp) {
               application.TENURE_LOCATION = obj.locationDescription;
               application.RESPONSIBLE_BUSINESS_UNIT = obj.businessUnit.name;
               application.CROWN_LANDS_FILE = obj.fileNumber;
-              application.DISPOSITION_TRANSACTION_SID = disp;
+              application.DISPOSITION_TRANSACTION_SID = dispositionID;
               application.parcels = [];
               application.interestedParties = [];
               application.statusHistoryEffectiveDate =
@@ -243,13 +277,51 @@ exports.getApplicationByDispositionID = function(accessToken, disp) {
  */
 exports.getAllApplicationIDs = function(accessToken, filterParams = {}) {
   return new Promise(function(resolve, reject) {
+    try {
+      internalGetAllApplicationIDs(accessToken, filterParams).then(applicationIDs => {
+        defaultLog.info(`found ${applicationIDs.length} applications.`);
+        resolve(applicationIDs);
+      });
+    } catch (error) {
+      defaultLog.error('getAllApplicationIDs error:', error);
+      reject(error);
+    }
+  });
+};
+
+/**
+ * Recursively Fetches all pages of application landUseApplicationIds (aka: dispositionID, tantalisID) from Tantalis given the filter params provided.
+ *
+ * @param {*} accessToken Tantalis API access token. (required)
+ * @param {*} [filterParams={}] Object containing Tantalis query filters. See Tantalis API Spec. (optional)
+ * @param {number} [pageNumber=1] pagination - page number (optional)
+ * @param {number} [pageRowCount=100] pagination - records per page (optional)
+ * @param {*} [applicationIDs=[]] array to store application ids, necessary to support recursive calls (optional)
+ * @returns {*} applicationIDs array of application IDs
+ */
+const internalGetAllApplicationIDs = function(
+  accessToken,
+  filterParams = {},
+  pageNumber = 1,
+  pageRowCount = 100, // fetch the maximum number of results each time
+  applicationIDs = []
+) {
+  return new Promise(function(resolve, reject) {
     const queryString = `?${qs.stringify(filterParams)}`;
 
-    defaultLog.info('Looking up all applications:', tantalisAPI + 'landUseApplications' + queryString);
+    defaultLog.info(
+      'Looking up all applications:',
+      tantalisAPI + 'landUseApplications' + queryString + `&pageNumber=${pageNumber}` + `&pageRowCount=${pageRowCount}`
+    );
 
     request.get(
       {
-        url: tantalisAPI + 'landUseApplications' + queryString,
+        url:
+          tantalisAPI +
+          'landUseApplications' +
+          queryString +
+          `&pageNumber=${pageNumber}` +
+          `&pageRowCount=${pageRowCount}`,
         auth: {
           bearer: accessToken
         }
@@ -265,26 +337,36 @@ exports.getAllApplicationIDs = function(accessToken, filterParams = {}) {
           try {
             var obj = JSON.parse(body);
             defaultLog.debug('o:', JSON.stringify(obj));
-            var applicationIDs = [];
             _.forEach(obj.elements, function(element) {
               if (element) {
                 applicationIDs.push(element.landUseApplicationId);
               }
             });
 
-            if (!applicationIDs.length) {
-              defaultLog.info('No applications found.');
-              resolve([]);
-            }
-
-            resolve(applicationIDs);
-          } catch (e) {
-            defaultLog.error('Object Parsing Failed:', e);
-            reject(e);
+            resolve({ applicationIDs: applicationIDs, totalRowCount: obj.totalRowCount });
+          } catch (error) {
+            defaultLog.error('internalGetAllApplicationIDs error:', error);
+            reject(error);
           }
         }
       }
     );
+  }).then(paginatedApplications => {
+    defaultLog.debug('internalGetAllApplicationIDs: ', JSON.stringify(paginatedApplications));
+
+    if (paginatedApplications.totalRowCount > paginatedApplications.applicationIDs.length) {
+      // if total count > current application count, increment the pagination and fetch more results.
+      return internalGetAllApplicationIDs(
+        accessToken,
+        filterParams,
+        ++pageNumber,
+        pageRowCount,
+        paginatedApplications.applicationIDs
+      );
+    }
+
+    // if all pages of results have been collected
+    return Promise.resolve(applicationIDs);
   });
 };
 
