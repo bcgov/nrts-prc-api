@@ -22,6 +22,7 @@ var tagList = [
   'publishDate',
   'purpose',
   'status',
+  'reason',
   'subpurpose',
   'subtype',
   'tantalisID',
@@ -353,6 +354,7 @@ exports.protectedPost = function(args, res, next) {
   delete obj.type;
   delete obj.subtype;
   delete obj.status;
+  delete obj.reason;
   delete obj.tenureStage;
   delete obj.location;
   delete obj.businessUnit;
@@ -386,6 +388,7 @@ exports.protectedPost = function(args, res, next) {
         savedApp.type = data.TENURE_TYPE;
         savedApp.subtype = data.TENURE_SUBTYPE;
         savedApp.status = data.TENURE_STATUS;
+        savedApp.reason = data.TENURE_REASON;
         savedApp.tenureStage = data.TENURE_STAGE;
         savedApp.location = data.TENURE_LOCATION;
         savedApp.businessUnit = data.RESPONSIBLE_BUSINESS_UNIT;
@@ -524,10 +527,11 @@ exports.protectedRefresh = function(args, res, next) {
   var Application = require('mongoose').model('Application');
   Application.findOne({ _id: objId }, function(err, applicationObject) {
     if (applicationObject) {
-      defaultLog.debug('applicationObject:', JSON.stringify(applicationObject));
+      defaultLog.debug('application before refresh:', JSON.stringify(applicationObject));
 
       TTLSUtils.updateApplication(applicationObject).then(
         updatedApplicationAndFeatures => {
+          defaultLog.debug('application after refresh:', JSON.stringify(applicationObject));
           return Actions.sendResponse(res, 200, updatedApplicationAndFeatures);
         },
         error => {
@@ -691,6 +695,16 @@ var addStandardQueryFilters = function(query, args) {
       queryArray.push(queryString.eq);
     }
     _.assignIn(query, { status: { $in: queryArray } });
+  }
+  if (args.swagger.params.reason && args.swagger.params.reason.value !== undefined) {
+    var queryString = qs.parse(args.swagger.params.reason.value);
+    var queryArray = [];
+    if (Array.isArray(queryString.eq)) {
+      queryArray = queryString.eq;
+    } else {
+      queryArray.push(queryString.eq);
+    }
+    _.assignIn(query, { reason: { $in: queryArray } });
   }
   if (args.swagger.params.agency && args.swagger.params.agency.value !== undefined) {
     _.assignIn(query, { agency: args.swagger.params.agency.value });
