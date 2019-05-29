@@ -16,15 +16,15 @@ podTemplate(label: sonarqubePodLabel, name: sonarqubePodLabel, serviceAccount: '
   )
 ]) {
   node(sonarqubePodLabel) {
-    stage('checkout code') {
+    stage('Checkout Code') {
       checkout scm
     }
-    stage('exeucte sonar') {
+    stage('Exeucte Sonar') {
       dir('sonar-runner') {
         try {
           sh './gradlew sonarqube -Dsonar.host.url=https://sonarqube-prc-tools.pathfinder.gov.bc.ca -Dsonar.verbose=true --stacktrace --info'
-        } finally {
-
+        } catch(e) {
+          echo "Sonar: Failed: ${e}"
         }
       }
     }
@@ -41,13 +41,14 @@ pipeline {
       steps {
         script {
           try {
-            echo "Building: ${env.JOB_NAME} #${env.BUILD_ID}"
+            echo "Building: env.JOB_NAME=${env.JOB_NAME} env.BUILD_ID=${env.BUILD_ID}"
             notifyBuild("Building: ${env.JOB_NAME} #${env.BUILD_ID}", "YELLOW")
             openshiftBuild bldCfg: 'nrts-prc-api-master', showBuildLogs: 'true'
           } catch (e) {
             notifyBuild("BUILD ${env.JOB_NAME} #${env.BUILD_ID} ABORTED", "RED")
-            error('Stopping early…')
+            error("Building: Failed: ${e}")
           }
+          echo "Building: Success"
         }
       }
     }
@@ -64,5 +65,5 @@ def notifyBuild(String msg = '', String colour = 'GREEN') {
   }
 
   // Send notifications
-  slackSend (color: colorCode, message: msg)
+  rocketSend (channel: 'acrfd', message: msg, rawMessage: true)
 }
