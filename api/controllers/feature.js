@@ -218,9 +218,7 @@ var getFeatures = function(role, query, fields) {
 
     // Add requested fields - sanitize first by including only those that we can/want to return
     var sanitizedFields = _.remove(fields, function(f) {
-      return (
-        _.indexOf(['type', 'tags', 'geometry', 'geometryName', 'properties', 'isDeleted', 'applicationID'], f) !== -1
-      );
+      return _.indexOf(['type', 'tags', 'geometry', 'properties', 'isDeleted', 'applicationID'], f) !== -1;
     });
     _.each(sanitizedFields, function(f) {
       projection[f] = 1;

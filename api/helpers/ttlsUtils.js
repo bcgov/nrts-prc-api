@@ -34,7 +34,7 @@ exports.loginWebADE = function() {
           defaultLog.error('WebADE Login Error:', err);
           reject(err);
         } else if (res && res.statusCode !== 200) {
-          defaultLog.info('WebADE Login ResponseCode:', res.statusCode);
+          defaultLog.warn('WebADE Login ResponseCode:', res.statusCode);
           reject({ code: (res && res.statusCode) || null });
         } else {
           try {
@@ -91,7 +91,7 @@ exports.getApplicationByFilenumber = function(accessToken, clFile, pageNumber = 
           defaultLog.error('TTLS API Error:', err);
           reject(err);
         } else if (res && res.statusCode !== 200) {
-          defaultLog.info('TTLS API ResponseCode:', res.statusCode);
+          defaultLog.warn('TTLS API ResponseCode:', res.statusCode);
           reject({ code: (res && res.statusCode) || null });
         } else {
           try {
@@ -163,7 +163,7 @@ exports.getApplicationByDispositionID = function(accessToken, dispositionID, pag
           defaultLog.error('TTLS API Error:', err);
           reject(err);
         } else if (res && res.statusCode !== 200) {
-          defaultLog.info('TTLS API ResponseCode:', res.statusCode);
+          defaultLog.warn('TTLS API ResponseCode:', res.statusCode);
           reject({ code: (res && res.statusCode) || null });
         } else {
           try {
@@ -207,14 +207,18 @@ exports.getApplicationByDispositionID = function(accessToken, dispositionID, pag
 
                   const geometryArray = spatialUtils.getGeometryArray(geo);
 
-                  geometryArray.forEach(geometry => {
-                    application.parcels.push({
-                      type: 'Feature',
-                      geometry: geometry,
-                      properties: feature,
-                      crs: crs
-                    });
+                  // geometryArray.forEach(geometry => {
+                  application.parcels.push({
+                    type: 'Feature',
+                    // NB: always store as GeometryCollection - this is currently the simplest way of handling
+                    // both regular Geometry {Polygon}, {Line}, {etc} AND GeometryCollection [{Polygon}, {Line}, {etc}]
+                    // types without introducing new mongo collections and code to handle the fact that
+                    // GeometryCollections have a different spec than the regular Geometry types.
+                    geometry: { type: 'GeometryCollection', geometries: geometryArray },
+                    properties: feature,
+                    crs: crs
                   });
+                  // });
                 }
               }
 
@@ -226,10 +230,12 @@ exports.getApplicationByDispositionID = function(accessToken, dispositionID, pag
                 if (f.geometry) {
                   centroids.features.push(turf.centroid(f));
                 }
+
                 if (f.properties && f.properties.TENURE_AREA_IN_HECTARES) {
                   application.areaHectares += parseFloat(f.properties.TENURE_AREA_IN_HECTARES);
                 }
               });
+
               // Centroid of all the shapes.
               if (centroids.features.length > 0) {
                 application.centroid = turf.centroid(centroids).geometry.coordinates;
@@ -389,8 +395,15 @@ exports.updateApplication = function(applicationToUpdate) {
         .then(() => {
           return updateFeatures(applicationToUpdate, tantalisApp);
         })
-        .then(updatedApp => {
-          return updateApplicationMeta(updatedApp, tantalisApp);
+        .then(updatedApplicationAndFeatures => {
+          return updateApplicationMeta(updatedApplicationAndFeatures.application, tantalisApp).then(
+            updatedApplication => {
+              return Promise.resolve({
+                application: updatedApplication,
+                features: updatedApplicationAndFeatures.features
+              });
+            }
+          );
         });
     });
   });
@@ -405,7 +418,7 @@ exports.updateApplication = function(applicationToUpdate) {
 const deleteAllApplicationFeatures = function(applicationObjectID) {
   return new Promise(function(resolve, reject) {
     const featureModel = mongoose.model('Feature');
-    featureModel.deleteOne({ applicationID: applicationObjectID }, function(error, data) {
+    featureModel.deleteMany({ applicationID: applicationObjectID }, function(error, data) {
       if (error) {
         defaultLog.error('deleteAllApplicationFeatures:', error);
         reject(error);
@@ -421,7 +434,8 @@ const deleteAllApplicationFeatures = function(applicationObjectID) {
  *
  * @param {Application} acrfdApp application as it exists in ACRFD
  * @param {Application} tantalisApp application with the latest values from Tantalis
- * @returns {Promise} promise that resolves wih the updated ACRFD application
+ * @returns {Promise} promise that resolves wih the updated ACRFD application and features, in the form:
+ *                   { application: updatedApplication, features: [updatedFeature] }
  */
 const updateFeatures = function(acrfdApp, tantalisApp) {
   return new Promise(function(resolve, reject) {
@@ -470,16 +484,21 @@ const updateFeatures = function(acrfdApp, tantalisApp) {
     }
     acrfdApp.statusHistoryEffectiveDate = tantalisApp.statusHistoryEffectiveDate;
 
+    const updatedFeatures = [];
     Promise.resolve()
       .then(function() {
         return allFeaturesForDisp.reduce(function(previousFeature, currentFeature) {
           return previousFeature.then(function() {
-            return saveFeature(currentFeature, acrfdApp._id);
+            return saveFeature(currentFeature, acrfdApp._id).then(updatedFeature => {
+              updatedFeature.forEach(element => {
+                updatedFeatures.push(element);
+              });
+            });
           });
         }, Promise.resolve());
       })
       .then(function() {
-        resolve(acrfdApp);
+        resolve({ application: acrfdApp, features: updatedFeatures });
       });
   });
 };

@@ -524,11 +524,11 @@ exports.protectedRefresh = function(args, res, next) {
   var Application = require('mongoose').model('Application');
   Application.findOne({ _id: objId }, function(err, applicationObject) {
     if (applicationObject) {
-      defaultLog.info('applicationObject:', JSON.stringify(applicationObject));
+      defaultLog.debug('applicationObject:', JSON.stringify(applicationObject));
 
       TTLSUtils.updateApplication(applicationObject).then(
-        updatedApplicationObject => {
-          return Actions.sendResponse(res, 200, updatedApplicationObject);
+        updatedApplicationAndFeatures => {
+          return Actions.sendResponse(res, 200, updatedApplicationAndFeatures);
         },
         error => {
           return Actions.sendResponse(res, null, error);
