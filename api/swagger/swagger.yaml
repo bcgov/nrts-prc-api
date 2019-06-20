@@ -189,20 +189,8 @@ definitions:
         type: string
         example: "Feature"
       geometry:
-          type: object
-          properties:
-            coordinates:
-              type: array
-              items:
-                type: array
-                items:
-                  type: string
-                  example: [-130.29066471641792, 54.01793907462689]
-            type:
-              type: string
-              example: "Polygon"
-      geometryName:
-        type: string
+        type: object
+        $ref: "#/definitions/GeometryCollection"
       properties:
         type: object
       isDeleted:
@@ -222,7 +210,6 @@ definitions:
       - type
       - tags
       - geometry
-      - geometryName
       - properties
       - isDeleted
       - applicationID
@@ -562,6 +549,138 @@ definitions:
       - country
       - postalCode
       - notes
+
+### GeoJson Definitions
+  Geometry:
+    type: object
+    description: GeoJSon geometry
+    discriminator: type
+    required:
+      - type
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#geometry-objects
+    properties:
+      type:
+        type: string
+        enum:
+        - Point
+        - LineString
+        - Polygon
+        - MultiPoint
+        - MultiLineString
+        - MultiPolygon
+        description: the geometry type
+
+  Point2D:
+    type: array
+    maxItems: 2
+    minItems: 2
+    items:
+      type: number
+
+
+  Point:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id2
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            $ref: '#/definitions/Point2D'
+
+  LineString:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id3
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              $ref: '#/definitions/Point2D'
+
+  Polygon:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id4
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              type: array
+              items:
+                $ref: '#/definitions/Point2D'
+
+  MultiPoint:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id5
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              $ref: '#/definitions/Point2D'
+
+  MultiLineString:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id6
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              type: array
+              items:
+                $ref: '#/definitions/Point2D'
+
+
+  MultiPolygon:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id6
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              type: array
+              items:
+                type: array
+                items:
+                  $ref: '#/definitions/Point2D'
+
+  GeometryCollection:
+    type: object
+    description: GeoJSon geometry collection
+    required:
+     - type
+     - geometries
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#geometrycollection
+    properties:
+      type:
+        type: string
+        enum:
+        - GeometryCollection
+      geometries:
+        type: array
+        items:
+          $ref: '#/definitions/Geometry'
 
 ### Common Definitions
   Token:
@@ -1185,7 +1304,16 @@ paths:
         "200":
           description: "Success"
           schema:
-            $ref: "#/definitions/Application"
+            type: object
+            properties:
+              application:
+                type: object
+                $ref: "#/definitions/Application"
+              features:
+                type: array
+                items:
+                  type: object
+                  $ref: "#/definitions/Feature"
         "403":
           description: "Access Denied"
           schema:
@@ -1193,9 +1321,9 @@ paths:
     put:
       tags:
         - application
-      summary: "Refresh an Application with the latest data from Tantalis"
+      summary: "Refresh an Application and its Features with the latest data from Tantalis"
       operationId: protectedRefresh
-      description: "Authenticated access to refresh the application with the latest data from Tantalis"
+      description: "Authenticated access to refresh the Application and its Features with the latest data from Tantalis"
       security:
         - Bearer: []
       x-security-scopes:
@@ -1211,7 +1339,16 @@ paths:
         "200":
           description: "Success"
           schema:
-            $ref: "#/definitions/Application"
+            type: object
+            properties:
+              application:
+                type: object
+                $ref: "#/definitions/Application"
+              features:
+                type: array
+                items:
+                  type: object
+                  $ref: "#/definitions/Feature"
         "403":
           description: "Access Denied"
           schema:
