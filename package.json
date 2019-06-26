@@ -11,7 +11,7 @@
   "main": "app",
   "scripts": {
     "start": "node app",
-    "test": "echo Test suite should be run with `npm run tests` or npm `run tests-ci`",
+    "test": "echo Test suite should be run with `npm run tests` or `npm run tests-ci`",
     "tests": "SET UPLOAD_DIRECTORY=./api/test/uploads/ & jest --runInBand",
     "tests-debug": "node --inspect node_modules/.bin/jest --runInBand",
     "lint": "eslint .",

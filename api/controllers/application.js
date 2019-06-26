@@ -159,7 +159,10 @@ exports.protectedGet = function(args, res, next) {
   var skip = null;
   var limit = null;
 
-  defaultLog.info('args.swagger.params:', JSON.stringify(args.swagger.operation['x-security-scopes']));
+  defaultLog.info(
+    'args.swagger.operation.x-security-scopes:',
+    JSON.stringify(args.swagger.operation['x-security-scopes'])
+  );
 
   // Build match query if on appId route
   var query = {};
@@ -207,7 +210,10 @@ exports.protectedGet = function(args, res, next) {
 };
 
 exports.protectedHead = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', JSON.stringify(args.swagger.operation['x-security-scopes']));
+  defaultLog.info(
+    'args.swagger.operation.x-security-scopes:',
+    JSON.stringify(args.swagger.operation['x-security-scopes'])
+  );
 
   // Build match query if on appId route
   var query = {};
@@ -719,7 +725,7 @@ var addStandardQueryFilters = function(query, args) {
     _.assignIn(query, { agency: args.swagger.params.agency.value });
   }
   if (args.swagger.params.businessUnit && args.swagger.params.businessUnit.value !== undefined) {
-    _.assignIn(query, { businessUnit: args.swagger.params.businessUnit.value });
+    _.assignIn(query, { businessUnit: { $eq: args.swagger.params.businessUnit.value.eq } });
   }
   if (args.swagger.params.client && args.swagger.params.client.value !== undefined) {
     _.assignIn(query, { client: args.swagger.params.client.value });
@@ -830,6 +836,8 @@ var addStandardQueryFilters = function(query, args) {
       });
     }
   }
+
+  defaultLog.debug('query:', JSON.stringify(query));
 
   return query;
 };
