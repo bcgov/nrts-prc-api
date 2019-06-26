@@ -156,13 +156,17 @@ exports.publicGet = function(args, res, next) {
 };
 
 exports.protectedGet = function(args, res, next) {
+  var query = {};
+  var sort = {};
   var skip = null;
   var limit = null;
 
-  defaultLog.info('args.swagger.params:', JSON.stringify(args.swagger.operation['x-security-scopes']));
+  defaultLog.info(
+    'args.swagger.operation.x-security-scopes:',
+    JSON.stringify(args.swagger.operation['x-security-scopes'])
+  );
 
   // Build match query if on appId route
-  var query = {};
   if (args.swagger.params.appId) {
     query = Utils.buildQuery('_id', args.swagger.params.appId.value, query);
   } else {
@@ -170,6 +174,12 @@ exports.protectedGet = function(args, res, next) {
     var processedParameters = Utils.getSkipLimitParameters(args.swagger.params.pageSize, args.swagger.params.pageNum);
     skip = processedParameters.skip;
     limit = processedParameters.limit;
+
+    if (args.swagger.params.sortBy && args.swagger.params.sortBy.value) {
+      var order_by = args.swagger.params.sortBy.value.charAt(0) == '-' ? -1 : 1;
+      var sort_by = args.swagger.params.sortBy.value.slice(1);
+      sort[sort_by] = order_by;
+    }
 
     try {
       query = addStandardQueryFilters(query, args);
@@ -192,7 +202,7 @@ exports.protectedGet = function(args, res, next) {
     query,
     getSanitizedFields(args.swagger.params.fields.value), // Fields
     null, // sort warmup
-    null, // sort
+    sort, // sort
     skip, // skip
     limit, // limit
     false
@@ -207,7 +217,10 @@ exports.protectedGet = function(args, res, next) {
 };
 
 exports.protectedHead = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', JSON.stringify(args.swagger.operation['x-security-scopes']));
+  defaultLog.info(
+    'args.swagger.operation.x-security-scopes:',
+    JSON.stringify(args.swagger.operation['x-security-scopes'])
+  );
 
   // Build match query if on appId route
   var query = {};
@@ -719,10 +732,18 @@ var addStandardQueryFilters = function(query, args) {
     _.assignIn(query, { agency: args.swagger.params.agency.value });
   }
   if (args.swagger.params.businessUnit && args.swagger.params.businessUnit.value !== undefined) {
-    _.assignIn(query, { businessUnit: args.swagger.params.businessUnit.value });
+    _.assignIn(query, { businessUnit: { $eq: args.swagger.params.businessUnit.value.eq } });
   }
   if (args.swagger.params.client && args.swagger.params.client.value !== undefined) {
-    _.assignIn(query, { client: args.swagger.params.client.value });
+    var queryString = qs.parse(args.swagger.params.client.value);
+    if (queryString.text) {
+      // This searches for text indexed fields, which client is currently marked as in the application model.
+      // If more fields are added to the text index, this logic may need to change as it will then search those fields
+      // as well, which may be un-desired. See docs.mongodb.com/manual/reference/operator/query/text/
+      _.assignIn(query, { $text: { $search: queryString.text } });
+    } else if (queryString.eq) {
+      _.assignIn(query, { client: { $eq: queryString.eq } });
+    }
   }
   if (args.swagger.params.tenureStage && args.swagger.params.tenureStage.value !== undefined) {
     _.assignIn(query, { tenureStage: args.swagger.params.tenureStage.value });
@@ -830,6 +851,8 @@ var addStandardQueryFilters = function(query, args) {
       });
     }
   }
+
+  defaultLog.debug('query:', JSON.stringify(query));
 
   return query;
 };

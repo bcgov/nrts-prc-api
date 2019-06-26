@@ -421,7 +421,6 @@ definitions:
       - _addedBy
       - _application
       - tags
-      - name
       - startDate
       - endDate
       - isDeleted
@@ -1038,6 +1037,11 @@ paths:
           format: date-time
           required: false
           description: "Status History Effective Date that Applications must compare to"
+        - in: query
+          name: sortBy
+          type: string
+          required: false
+          description: "Application field to sort by"
       responses:
         "200":
           description: "Success"
@@ -1637,6 +1641,7 @@ paths:
           required: false
           description: "Publish Date(s) that Applications must match"
           type: string
+          format: date-time
       responses:
         "200":
           description: "Success"
