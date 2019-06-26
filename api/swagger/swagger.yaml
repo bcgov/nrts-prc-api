@@ -1637,6 +1637,7 @@ paths:
           required: false
           description: "Publish Date(s) that Applications must match"
           type: string
+          format: date-time
       responses:
         "200":
           description: "Success"

@@ -42,7 +42,10 @@ exports.publicGet = function(args, res, next) {
 };
 
 exports.protectedHead = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', JSON.stringify(args.swagger.operation['x-security-scopes']));
+  defaultLog.info(
+    'args.swagger.operation.x-security-scopes:',
+    JSON.stringify(args.swagger.operation['x-security-scopes'])
+  );
 
   // Build match query if on CommentPeriodId route
   var query = {};
@@ -85,7 +88,10 @@ exports.protectedHead = function(args, res, next) {
 };
 
 exports.protectedGet = function(args, res, next) {
-  defaultLog.info('args.swagger.params:', JSON.stringify(args.swagger.operation['x-security-scopes']));
+  defaultLog.info(
+    'args.swagger.operation.x-security-scopes:',
+    JSON.stringify(args.swagger.operation['x-security-scopes'])
+  );
 
   // Build match query if on CommentPeriodId route
   var query = {};
