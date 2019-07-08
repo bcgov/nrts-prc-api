@@ -554,7 +554,10 @@ const updateApplicationMeta = function(acrfdApp, tantalisApp) {
     updatedAppObject.statusHistoryEffectiveDate = acrfdApp.statusHistoryEffectiveDate;
 
     const ApplicationModel = mongoose.model('Application');
-    ApplicationModel.findOneAndUpdate({ _id: acrfdApp._id }, updatedAppObject, function(error, updatedApp) {
+    ApplicationModel.findOneAndUpdate({ _id: acrfdApp._id }, updatedAppObject, { new: true }, function(
+      error,
+      updatedApp
+    ) {
       if (error) {
         defaultLog.error('updateApplicationMeta:', error);
         reject(error);
