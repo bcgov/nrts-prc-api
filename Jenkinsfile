@@ -37,7 +37,7 @@ pipeline {
     skipDefaultCheckout()
   }
   stages {
-    stage('Building: nrts-prc-api master branch') {
+    stage('Building: api (master branch)') {
       steps {
         script {
           try {
