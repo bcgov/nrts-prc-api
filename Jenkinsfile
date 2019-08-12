@@ -38,7 +38,7 @@ pipeline {
   }
   environment {
     // this credential needs to exist in Jenkins (https://jenkins.io/doc/book/using/using-credentials)
-    // and should contain the RocketChat Integration Token
+    // and should contain the RocketChat Integration Token (https://rocket.chat/docs/administrator-guides/integrations/)
     ROCKETCHAT_WEBHOOK_TOKEN = credentials('rocketchat_incoming_webhook_token')
   }
   stages {
@@ -46,13 +46,14 @@ pipeline {
       steps {
         script {
           try {
-            notifyBuild("Building: ${env.JOB_NAME} #${env.BUILD_ID}", "YELLOW")
+            notifyBuild("Building: ${env.JOB_NAME} ${env.BUILD_ID}", "YELLOW")
             echo "Building: env.JOB_NAME=${env.JOB_NAME} env.BUILD_ID=${env.BUILD_ID}"
             openshiftBuild bldCfg: 'nrts-prc-api-master', showBuildLogs: 'true'
           } catch (e) {
-            notifyBuild("BUILD ${env.JOB_NAME} #${env.BUILD_ID} ABORTED", "RED")
+            notifyBuild("BUILD ${env.JOB_NAME} ${env.BUILD_ID} ABORTED", "RED")
             error("Building: Failed: ${e}")
           }
+          notifyBuild("Built ${env.JOB_NAME} ${env.BUILD_ID}", "GREEN")
           echo "Building: Success"
         }
       }
@@ -60,16 +61,18 @@ pipeline {
   }
 }
 
-def notifyBuild(String msg = '', String colour = 'GREEN') {
-  if (colour == 'YELLOW') {
-    colorCode = '#FFFF00'
-  } else if (colour == 'GREEN') {
+def notifyBuild(String msg = '', String colour = '') {
+  if (colour == 'GREEN') {
     colorCode = '#00FF00'
-  } else {
+  } else if (colour == 'YELLOW') {
+    colorCode = '#FFFF00'
+  } else if (colour == 'RED') {
     colorCode = '#FF0000'
+  } else {
+    colorCode = '#000000' // black
   }
 
-  String rocketChatMessage = "{ \"text\":\"${msg}\", \"attachments\": [{ \"text\":\"${msg}\", \"color\":\"${colorCode}\" }] }"
+  String rocketChatMessage = "{ \"attachments\": [{ \"text\":\"${msg}\", \"color\":\"${colorCode}\" }] }"
 
   String rocketChatWebHookURL = "https://chat.pathfinder.gov.bc.ca/hooks/${ROCKETCHAT_WEBHOOK_TOKEN}"
 
