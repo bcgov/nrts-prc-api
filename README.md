@@ -89,11 +89,40 @@ npm run lint-fix
 
 The API is defined in `swagger.yaml`.
 
-If the this nrts-prc-api is running locally, you can view the api docs at: `http://localhost:3000/api/docs/`
+If this project is running locally, you can view the api docs at: `http://localhost:3000/api/docs/`
 
-This project uses npm package `swagger-tools` via `./app.js` to automatically generate the express server and its routes.
+This project uses npm package `swagger-tools` via `./app.js` to automatically generate the express server and its routes, based on the contents of `swagger.yaml`.
+
+Useful Note: The handler function for each route is specified by the `operationId` field.
 
 Recommend reviewing the [Open API Specification](https://swagger.io/docs/specification/about/) before making any changes to the `swagger.yaml` file.
+
+# Logging
+
+A centralized logger has been created (see `api/helpers/logger.js`).
+
+## Logger configuration
+The loggers log level can be configured via an environment variable: `LOG_LEVEL`
+
+Set this variable to one of: `error`, `warn`, `info`, `debug`
+
+Default value: `info`
+
+## Instantiating the logger in your class/file
+```
+const log = require('./logger)('a meaningful label, typically the class name`)
+```
+
+## Using the logger
+```
+log.error('Used when logging unexpected errors.  Generally these will only exist in catch() blocks');
+
+log.warn('Used when logging soft errors.  For example, if your request finished but returned a 404 not found');
+
+log.info('General log messages about the state of the application');
+
+log.debug('Useful for logging objects and other developer data', JSON.stringify(myObject));
+```
 
 # Testing
 

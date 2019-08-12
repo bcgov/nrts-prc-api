@@ -13,18 +13,28 @@ const helpers = require('@turf/helpers');
 const spatialUtils = require('./spatialUtils');
 const defaultLog = require('./logger')('ttlsUtils');
 
-let tantalisAPI = process.env.TTLS_API_ENDPOINT || 'https://api.nrs.gov.bc.ca/ttls-api/v1/';
-let webADEAPI = process.env.WEBADE_AUTH_ENDPOINT || 'https://api.nrs.gov.bc.ca/oauth2/v1/';
-let username = process.env.WEBADE_USERNAME || 'TTLS-EXT';
+let tantalisAPI =
+  process.env.TTLS_API_ENDPOINT ||
+  'https://t1api.nrs.gov.bc.ca/ttls-api/v1/' ||
+  'https://api.nrs.gov.bc.ca/ttls-api/v1/';
+let webADEAPI =
+  process.env.WEBADE_AUTH_ENDPOINT ||
+  'https://t1api.nrs.gov.bc.ca/oauth2/v1/' ||
+  'https://api.nrs.gov.bc.ca/oauth2/v1/';
+let username = process.env.WEBADE_USERNAME || 'ACRFD_SERVICE_CLIENT' || 'TTLS-EXT';
 let password = process.env.WEBADE_PASSWORD;
 
 // WebADE Login
 exports.loginWebADE = function() {
   // Login to webADE and return access_token for use in subsequent calls.
   return new Promise(function(resolve, reject) {
+    const url = webADEAPI + 'oauth/token?grant_type=client_credentials&disableDeveloperFilter=true&scope=TTLS.*';
+
+    defaultLog.debug('WebADE Login url:', url);
+
     request.get(
       {
-        url: webADEAPI + 'oauth/token?grant_type=client_credentials&disableDeveloperFilter=true&scope=TTLS.*',
+        url,
         headers: {
           Authorization: 'Basic ' + Buffer.from(username + ':' + password).toString('base64')
         }
@@ -34,7 +44,7 @@ exports.loginWebADE = function() {
           defaultLog.error('WebADE Login Error:', err);
           reject(err);
         } else if (res && res.statusCode !== 200) {
-          defaultLog.warn('WebADE Login ResponseCode:', res.statusCode);
+          defaultLog.warn('WebADE Login Response:', res.statusCode, body);
           reject({ code: (res && res.statusCode) || null });
         } else {
           try {
@@ -66,22 +76,16 @@ exports.loginWebADE = function() {
  */
 exports.getApplicationByFilenumber = function(accessToken, clFile, pageNumber = 1, pageRowCount = 100) {
   return new Promise(function(resolve, reject) {
-    defaultLog.info(
-      'Looking up file:',
+    const url =
       tantalisAPI +
-        'landUseApplications' +
-        `?fileNumber=${clFile}` +
-        `&pageNumber=${pageNumber}` +
-        `&pageRowCount=${pageRowCount}`
-    );
+      'landUseApplications' +
+      `?fileNumber=${clFile}&pageNumber=${pageNumber}&pageRowCount=${pageRowCount}`;
+
+    defaultLog.info('Looking up tantalis applications by crown land file number:', url);
+
     request.get(
       {
-        url:
-          tantalisAPI +
-          'landUseApplications' +
-          `?fileNumber=${clFile}` +
-          `&pageNumber=${pageNumber}` +
-          `&pageRowCount=${pageRowCount}`,
+        url,
         auth: {
           bearer: accessToken
         }
@@ -91,7 +95,7 @@ exports.getApplicationByFilenumber = function(accessToken, clFile, pageNumber = 
           defaultLog.error('TTLS API Error:', err);
           reject(err);
         } else if (res && res.statusCode !== 200) {
-          defaultLog.warn('TTLS API ResponseCode:', res.statusCode);
+          defaultLog.warn('TTLS API Response:', res.statusCode, body);
           reject({ code: (res && res.statusCode) || null });
         } else {
           try {
@@ -101,14 +105,23 @@ exports.getApplicationByFilenumber = function(accessToken, clFile, pageNumber = 
             if (obj && obj.elements && obj.elements.length > 0) {
               for (let app of obj.elements) {
                 var application = {};
-                application.TENURE_PURPOSE = app.purposeCode['description'];
-                application.TENURE_SUBPURPOSE = app.purposeCode.subPurposeCodes[0]['description'];
-                application.TENURE_TYPE = app.landUseTypeCode['description'];
-                application.TENURE_SUBTYPE = app.landUseTypeCode.landUseSubTypeCodes[0]['description'];
-                application.TENURE_STATUS = app.statusCode['description'];
-                application.TENURE_STAGE = app.stageCode['description'];
+                application.TENURE_PURPOSE = app.purposeCode && app.purposeCode['description'];
+                application.TENURE_SUBPURPOSE =
+                  app.purposeCode &&
+                  app.purposeCode.subPurposeCodes &&
+                  app.purposeCode.subPurposeCodes[0] &&
+                  app.purposeCode.subPurposeCodes[0]['description'];
+                application.TENURE_TYPE = app.landUseTypeCode && app.landUseTypeCode['description'];
+                application.TENURE_SUBTYPE =
+                  app.landUseTypeCode &&
+                  app.landUseTypeCode.landUseSubTypeCodes &&
+                  app.landUseTypeCode.landUseSubTypeCodes[0] &&
+                  app.landUseTypeCode.landUseSubTypeCodes[0]['description'];
+                application.TENURE_STATUS = app.statusCode && app.statusCode['description'];
+                application.TENURE_REASON = app.reasonCode && app.reasonCode['description'];
+                application.TENURE_STAGE = app.stageCode && app.stageCode['description'];
                 application.TENURE_LOCATION = app.locationDescription;
-                application.RESPONSIBLE_BUSINESS_UNIT = app.businessUnit.name;
+                application.RESPONSIBLE_BUSINESS_UNIT = app.businessUnit && app.businessUnit.name;
                 application.CROWN_LANDS_FILE = app.fileNumber;
                 application.DISPOSITION_TRANSACTION_SID = app.landUseApplicationId;
                 applications.push(application);
@@ -138,22 +151,14 @@ exports.getApplicationByFilenumber = function(accessToken, clFile, pageNumber = 
  */
 exports.getApplicationByDispositionID = function(accessToken, dispositionID, pageNumber = 1, pageRowCount = 100) {
   return new Promise(function(resolve, reject) {
-    defaultLog.info(
-      'Looking up disposition:',
-      tantalisAPI +
-        'landUseApplications/' +
-        dispositionID +
-        `&pageNumber=${pageNumber}` +
-        `&pageRowCount=${pageRowCount}`
-    );
+    const url =
+      tantalisAPI + 'landUseApplications/' + dispositionID + `?pageNumber=${pageNumber}&pageRowCount=${pageRowCount}`;
+
+    defaultLog.info('Looking up tantalis applications by disposition id:', url);
+
     request.get(
       {
-        url:
-          tantalisAPI +
-          'landUseApplications/' +
-          dispositionID +
-          `?pageNumber=${pageNumber}` +
-          `&pageRowCount=${pageRowCount}`,
+        url,
         auth: {
           bearer: accessToken
         }
@@ -163,7 +168,7 @@ exports.getApplicationByDispositionID = function(accessToken, dispositionID, pag
           defaultLog.error('TTLS API Error:', err);
           reject(err);
         } else if (res && res.statusCode !== 200) {
-          defaultLog.warn('TTLS API ResponseCode:', res.statusCode);
+          defaultLog.warn('TTLS API Response:', res.statusCode, body);
           reject({ code: (res && res.statusCode) || null });
         } else {
           try {
@@ -172,20 +177,29 @@ exports.getApplicationByDispositionID = function(accessToken, dispositionID, pag
             var application = {};
             if (obj) {
               // Setup the application object.
-              application.TENURE_PURPOSE = obj.purposeCode['description'];
-              application.TENURE_SUBPURPOSE = obj.purposeCode.subPurposeCodes[0]['description'];
-              application.TENURE_TYPE = obj.landUseTypeCode['description'];
-              application.TENURE_SUBTYPE = obj.landUseTypeCode.landUseSubTypeCodes[0]['description'];
-              application.TENURE_STATUS = obj.statusCode['description'];
-              application.TENURE_STAGE = obj.stageCode['description'];
+              application.TENURE_PURPOSE = obj.purposeCode && obj.purposeCode['description'];
+              application.TENURE_SUBPURPOSE =
+                obj.purposeCode &&
+                obj.purposeCode.subPurposeCodes &&
+                obj.purposeCode.subPurposeCodes[0] &&
+                obj.purposeCode.subPurposeCodes[0]['description'];
+              application.TENURE_TYPE = obj.landUseTypeCode && obj.landUseTypeCode['description'];
+              application.TENURE_SUBTYPE =
+                obj.landUseTypeCode &&
+                obj.landUseTypeCode.landUseSubTypeCodes &&
+                obj.landUseTypeCode.landUseSubTypeCodes[0] &&
+                obj.landUseTypeCode.landUseSubTypeCodes[0]['description'];
+              application.TENURE_STATUS = obj.statusCode && obj.statusCode['description'];
+              application.TENURE_REASON = obj.reasonCode && obj.reasonCode['description'];
+              application.TENURE_STAGE = obj.stageCode && obj.stageCode['description'];
               application.TENURE_LOCATION = obj.locationDescription;
-              application.RESPONSIBLE_BUSINESS_UNIT = obj.businessUnit.name;
+              application.RESPONSIBLE_BUSINESS_UNIT = obj.businessUnit && obj.businessUnit.name;
               application.CROWN_LANDS_FILE = obj.fileNumber;
               application.DISPOSITION_TRANSACTION_SID = dispositionID;
               application.parcels = [];
               application.interestedParties = [];
               application.statusHistoryEffectiveDate =
-                obj.statusHistory[0] != null
+                obj.statusHistory && obj.statusHistory[0] != null
                   ? new Date(obj.statusHistory[0].effectiveDate) // convert Unix Epoch Time (ms)
                   : null;
 
@@ -247,12 +261,12 @@ exports.getApplicationByDispositionID = function(accessToken, dispositionID, pag
                 partyObj.interestedPartyType = party.interestedPartyType;
 
                 if (party.interestedPartyType == 'I') {
-                  partyObj.firstName = party.individual.firstName;
-                  partyObj.lastName = party.individual.lastName;
+                  partyObj.firstName = party.individual && party.individual.firstName;
+                  partyObj.lastName = party.individual && party.individual.lastName;
                 } else {
                   // party.interestedPartyType == 'O'
-                  partyObj.legalName = party.organization.legalName;
-                  partyObj.divisionBranch = party.organization.divisionBranch;
+                  partyObj.legalName = party.organization && party.organization.legalName;
+                  partyObj.divisionBranch = party.organization && party.organization.divisionBranch;
                 }
                 // Check if we've already added this.
                 if (!_.includes(application.interestedParties, partyObj)) {
@@ -313,21 +327,18 @@ const internalGetAllApplicationIDs = function(
   applicationIDs = []
 ) {
   return new Promise(function(resolve, reject) {
-    const queryString = `?${qs.stringify(filterParams)}`;
+    const url =
+      tantalisAPI +
+      'landUseApplications' +
+      `?${qs.stringify(filterParams)}` +
+      `&pageNumber=${pageNumber}` +
+      `&pageRowCount=${pageRowCount}`;
 
-    defaultLog.info(
-      'Looking up all applications:',
-      tantalisAPI + 'landUseApplications' + queryString + `&pageNumber=${pageNumber}` + `&pageRowCount=${pageRowCount}`
-    );
+    defaultLog.info('Looking up all tantalis applications:', url);
 
     request.get(
       {
-        url:
-          tantalisAPI +
-          'landUseApplications' +
-          queryString +
-          `&pageNumber=${pageNumber}` +
-          `&pageRowCount=${pageRowCount}`,
+        url,
         auth: {
           bearer: accessToken
         }
@@ -337,7 +348,7 @@ const internalGetAllApplicationIDs = function(
           defaultLog.error('TTLS API Error:', err);
           reject(err);
         } else if (res && res.statusCode !== 200) {
-          defaultLog.info('TTLS API ResponseCode:', res.statusCode);
+          defaultLog.warn('TTLS API Response:', res.statusCode, body);
           reject({ code: (res && res.statusCode) || null });
         } else {
           try {
@@ -456,6 +467,7 @@ const updateFeatures = function(acrfdApp, tantalisApp) {
       f.properties.TENURE_PURPOSE = tantalisApp.TENURE_PURPOSE;
       f.properties.TENURE_SUBPURPOSE = tantalisApp.TENURE_SUBPURPOSE;
       f.properties.TENURE_STATUS = tantalisApp.TENURE_STATUS;
+      f.properties.TENURE_REASON = tantalisApp.TENURE_REASON;
       f.properties.TENURE_TYPE = tantalisApp.TENURE_TYPE;
       f.properties.TENURE_STAGE = tantalisApp.TENURE_STAGE;
       f.properties.TENURE_SUBTYPE = tantalisApp.TENURE_SUBTYPE;
@@ -543,6 +555,7 @@ const updateApplicationMeta = function(acrfdApp, tantalisApp) {
     updatedAppObject.purpose = tantalisApp.TENURE_PURPOSE;
     updatedAppObject.subpurpose = tantalisApp.TENURE_SUBPURPOSE;
     updatedAppObject.status = tantalisApp.TENURE_STATUS;
+    updatedAppObject.reason = tantalisApp.TENURE_REASON;
     updatedAppObject.type = tantalisApp.TENURE_TYPE;
     updatedAppObject.tenureStage = tantalisApp.TENURE_STAGE;
     updatedAppObject.subtype = tantalisApp.TENURE_SUBTYPE;
