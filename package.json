@@ -17,7 +17,9 @@
     "lint": "eslint .",
     "lint-fix:1": "eslint ./**/*.js --fix",
     "lint-fix:2": "prettier ./**/*.js --write --loglevel warn",
-    "lint-fix": "npm-run-all -l -s -c lint-fix:*"
+    "lint-fix": "npm-run-all -l -s -c lint-fix:*",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
     "@turf/helpers": "6.1.4",
@@ -48,7 +50,8 @@
     "validator": "10.11.0",
     "wkx": "0.4.7",
     "winston": "2.4.4",
-    "yamljs": "0.3.0"
+    "yamljs": "0.3.0",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "babel-eslint": "10.0.2",
@@ -78,5 +81,6 @@
       "prettier --write --loglevel warn",
       "git add"
     ]
-  }
+  },
+  "snyk": true
 }
