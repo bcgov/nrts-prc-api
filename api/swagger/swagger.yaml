@@ -1038,6 +1038,11 @@ paths:
           format: date-time
           required: false
           description: "Status History Effective Date that Applications must compare to"
+        - in: query
+          name: sortBy
+          type: string
+          required: false
+          description: "Application field to sort by"
       responses:
         "200":
           description: "Success"
