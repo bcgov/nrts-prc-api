@@ -421,7 +421,6 @@ definitions:
       - _addedBy
       - _application
       - tags
-      - name
       - startDate
       - endDate
       - isDeleted

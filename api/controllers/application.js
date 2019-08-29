@@ -175,15 +175,11 @@ exports.protectedGet = function(args, res, next) {
     skip = processedParameters.skip;
     limit = processedParameters.limit;
 
-    console.log(args.swagger.params.sortBy);
-
     if (args.swagger.params.sortBy && args.swagger.params.sortBy.value) {
       var order_by = args.swagger.params.sortBy.value.charAt(0) == '-' ? -1 : 1;
       var sort_by = args.swagger.params.sortBy.value.slice(1);
       sort[sort_by] = order_by;
     }
-
-    console.log(sort);
 
     try {
       query = addStandardQueryFilters(query, args);
