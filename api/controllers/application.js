@@ -735,7 +735,15 @@ var addStandardQueryFilters = function(query, args) {
     _.assignIn(query, { businessUnit: { $eq: args.swagger.params.businessUnit.value.eq } });
   }
   if (args.swagger.params.client && args.swagger.params.client.value !== undefined) {
-    _.assignIn(query, { client: args.swagger.params.client.value });
+    var queryString = qs.parse(args.swagger.params.client.value);
+    if (queryString.text) {
+      // This searches for text indexed fields, which client is currently marked as in the application model.
+      // If more fields are added to the text index, this logic may need to change as it will then search those fields
+      // as well, which may be un-desired. See docs.mongodb.com/manual/reference/operator/query/text/
+      _.assignIn(query, { $text: { $search: queryString.text } });
+    } else if (queryString.eq) {
+      _.assignIn(query, { client: { $eq: queryString.eq } });
+    }
   }
   if (args.swagger.params.tenureStage && args.swagger.params.tenureStage.value !== undefined) {
     _.assignIn(query, { tenureStage: args.swagger.params.tenureStage.value });

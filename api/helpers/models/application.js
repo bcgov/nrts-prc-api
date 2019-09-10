@@ -30,5 +30,8 @@ module.exports = require('../models')('Application', {
 
   // Note: Default on tag property is purely for display only, they have no real effect on the model.
   // This must be done in the code.
-  tags: [[{ type: String, trim: true, default: '[["sysadmin"]]' }]] // updated by API
+  tags: [[{ type: String, trim: true, default: '[["sysadmin"]]' }]], // updated by API
+
+  // Used to enable client (applicant) $text search.
+  __index: { client: 'text' }
 });
