@@ -1,14 +1,11 @@
 {
   "name": "nrts-prc-api-seed",
   "version": "0.0.1",
-  "author": "Severin Beauvais",
-  "contributors": [
-    "Severin Beauvais <severin.beauvais@gmail.com>"
-  ],
-  "description": "NRTS PRC API SEED",
-  "keywords": [],
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "main": "seed",
+  "scripts": {
+    "start": "node seed admin admin http localhost 3000"
+  },
   "dependencies": {
     "@turf/helpers": "6.1.4",
     "body-parser": "1.19.0",
@@ -19,7 +16,4 @@
     "request": "2.88.0",
     "winston": "2.4.4"
   },
-  "scripts": {
-    "start": "node seed admin admin http localhost 3000"
-  }
 }
