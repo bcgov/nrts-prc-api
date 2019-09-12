@@ -4,14 +4,16 @@ const mongoose = require('mongoose');
 const commentFactory = require('./factories/comment_factory').factory;
 const commentPeriodFactory = require('./factories/comment_period_factory').factory;
 const request = require('supertest');
-
-const fieldNames = ['comment', 'name'];
-
 const _ = require('lodash');
 
 const commentController = require('../controllers/comment.js');
 require('../helpers/models/comment');
 const Comment = mongoose.model('Comment');
+
+/*************************************
+  Mock Route Handlers + Helper Methods
+*************************************/
+const fieldNames = ['comment', 'name'];
 
 function paramsWithCommentId(req) {
   let params = test_helper.buildParams({ CommentId: req.params.id });
@@ -61,6 +63,10 @@ app.put('/api/comment/:id/unpublish', function(req, res) {
   return commentController.protectedUnPublish(paramsWithCommentId(req), res);
 });
 
+/*************************************
+  General Test Data + Helper Methods
+*************************************/
+
 const commentsData = [
   {
     name: 'Special Comment',
@@ -85,6 +91,10 @@ function setupComments(commentsData) {
       });
   });
 }
+
+/*************************************
+  Tests
+*************************************/
 
 describe('GET /Comment', () => {
   test('returns a list of non-deleted, public and sysadmin Comments', done => {
@@ -278,7 +288,7 @@ describe('POST /public/comment', () => {
   });
 
   describe('tags', () => {
-    test('defaults to sysadmin for tags and review tags', done => {
+    test('defaults to sysadmin for tags', done => {
       let commentObj = {
         name: 'Victoria',
         comment: 'Victoria is a great place'
@@ -294,9 +304,6 @@ describe('POST /public/comment', () => {
 
             expect(comment.tags.length).toEqual(1);
             expect(comment.tags[0]).toEqual(expect.arrayContaining(['sysadmin']));
-
-            expect(comment.review.tags.length).toEqual(1);
-            expect(comment.review.tags[0]).toEqual(expect.arrayContaining(['sysadmin']));
             done();
           });
         });
@@ -391,73 +398,6 @@ describe('PUT /comment/:id', () => {
       .then(response => {
         done();
       });
-  });
-
-  describe('review tags', () => {
-    test('sets sysadmin and public tags when commentStatus is "Accepted" ', done => {
-      let updateData = {
-        review: {},
-        commentStatus: 'Accepted'
-      };
-      let uri = '/api/comment/' + existingComment._id;
-      request(app)
-        .put(uri, updateData)
-        .send(updateData)
-        .then(response => {
-          Comment.findById(existingComment._id).exec(function(error, updatedComment) {
-            expect(updatedComment).not.toBeNull();
-            expect(updatedComment.review).not.toBeNull();
-            let reviewTags = updatedComment.review.tags;
-            expect(reviewTags.length).toEqual(2);
-            expect(reviewTags[0]).toEqual(expect.arrayContaining(['sysadmin']));
-            expect(reviewTags[1]).toEqual(expect.arrayContaining(['public']));
-            done();
-          });
-        });
-    });
-
-    test('sets sysadmin tags when commentStatus is "Pending" ', done => {
-      let updateData = {
-        review: {},
-        commentStatus: 'Pending'
-      };
-
-      let uri = '/api/comment/' + existingComment._id;
-      request(app)
-        .put(uri, updateData)
-        .send(updateData)
-        .then(response => {
-          Comment.findById(existingComment._id).exec(function(error, updatedComment) {
-            expect(updatedComment).not.toBeNull();
-            expect(updatedComment.review).not.toBeNull();
-            let reviewTags = updatedComment.review.tags;
-            expect(reviewTags.length).toEqual(1);
-            expect(reviewTags[0]).toEqual(expect.arrayContaining(['sysadmin']));
-            done();
-          });
-        });
-    });
-    test('sets sysadmin tags when commentStatus is "Rejected" ', done => {
-      let updateData = {
-        review: {},
-        commentStatus: 'Rejected'
-      };
-
-      let uri = '/api/comment/' + existingComment._id;
-      request(app)
-        .put(uri, updateData)
-        .send(updateData)
-        .then(response => {
-          Comment.findById(existingComment._id).exec(function(error, updatedComment) {
-            expect(updatedComment).not.toBeNull();
-            expect(updatedComment.review).not.toBeNull();
-            let reviewTags = updatedComment.review.tags;
-            expect(reviewTags.length).toEqual(1);
-            expect(reviewTags[0]).toEqual(expect.arrayContaining(['sysadmin']));
-            done();
-          });
-        });
-    });
   });
 
   describe('comment author tags', () => {
