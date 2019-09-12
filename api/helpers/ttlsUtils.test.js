@@ -4,7 +4,7 @@ var _ = require('lodash');
 
 describe('TTLSUtils', () => {
   const webADENock = {
-    domain: 'https://api.nrs.gov.bc.ca',
+    domain: 'https://t1api.nrs.gov.bc.ca',
     path: '/oauth2/v1/oauth/token?grant_type=client_credentials&disableDeveloperFilter=true&scope=TTLS.*',
     headers: {
       reqheaders: {
@@ -58,7 +58,7 @@ describe('TTLSUtils', () => {
     const accessToken = 'ACCESS_TOKEN';
     const fileNumber = '99999';
 
-    const fileSearchPath = '/ttls-api/v1/landUseApplications?fileNumber=99999';
+    const fileSearchPath = '/ttls-api/v1/landUseApplications?fileNumber=99999&pageNumber=1&pageRowCount=100';
     const ttlsApiResponse = {
       '@type': 'LandUseApplicationResources',
       links: [
@@ -101,6 +101,12 @@ describe('TTLSUtils', () => {
             links: [],
             code: 'GS',
             description: 'DISPOSITION IN GOOD STANDING'
+          },
+          reasonCode: {
+            '@type': 'ReasonCodeResource',
+            links: [],
+            code: 'C',
+            description: 'AMENDMENT APPROVED - APPLICATION'
           },
           landUseTypeCode: {
             '@type': 'LandUseTypeCodeResource',
@@ -158,12 +164,13 @@ describe('TTLSUtils', () => {
         });
       });
 
-      it('returns an application with the expected tenure status, stage, and location attrs', done => {
+      it('returns an application with the expected tenure status, reason, stage, and location attrs', done => {
         TTLSUtils.getApplicationByFilenumber(accessToken, fileNumber).then(response => {
           expect(response.length).toEqual(1);
           let firstApplication = response[0];
 
           expect(firstApplication.TENURE_STATUS).toEqual('DISPOSITION IN GOOD STANDING');
+          expect(firstApplication.TENURE_REASON).toEqual('AMENDMENT APPROVED - APPLICATION');
           expect(firstApplication.TENURE_STAGE).toEqual('TENURE');
           expect(firstApplication.TENURE_LOCATION).toEqual('Over the River and through the woods');
 
@@ -211,7 +218,7 @@ describe('TTLSUtils', () => {
       }
     };
 
-    const landUseAppSearchPath = '/ttls-api/v1/landUseApplications/666666';
+    const landUseAppSearchPath = '/ttls-api/v1/landUseApplications/666666?pageNumber=1&pageRowCount=100';
     const ttlsApiResponse = {
       '@type': 'LandUseApplicationResource',
       links: [
@@ -245,6 +252,12 @@ describe('TTLSUtils', () => {
         links: [],
         code: 'AC',
         description: 'DISPOSITION IN GOOD STANDING'
+      },
+      reasonCode: {
+        '@type': 'ReasonCodeResource',
+        links: [],
+        code: 'C',
+        description: 'AMENDMENT APPROVED - APPLICATION'
       },
       landUseTypeCode: {
         '@type': 'LandUseTypeCodeResource',
@@ -329,6 +342,7 @@ describe('TTLSUtils', () => {
           let firstApplication = response;
 
           expect(firstApplication.TENURE_STATUS).toEqual('DISPOSITION IN GOOD STANDING');
+          expect(firstApplication.TENURE_REASON).toEqual('AMENDMENT APPROVED - APPLICATION');
           expect(firstApplication.TENURE_STAGE).toEqual('TENURE');
           expect(firstApplication.TENURE_LOCATION).toEqual('Over the River and through the woods');
 
@@ -424,8 +438,10 @@ describe('TTLSUtils', () => {
             const firstParcel = application.parcels[0];
             const geometry = firstParcel.geometry;
             expect(geometry).not.toBeNull();
-            expect(geometry.type).toEqual('Polygon');
-            expect(geometry.coordinates).toBeDefined();
+            expect(geometry.type).toEqual('GeometryCollection');
+            expect(geometry.geometries).toBeDefined();
+            expect(geometry.geometries[0].type).toEqual('Polygon');
+            expect(geometry.geometries[0].coordinates).toBeDefined();
 
             done();
           });

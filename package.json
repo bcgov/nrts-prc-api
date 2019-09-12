@@ -1,12 +1,6 @@
 {
   "name": "nrts-prc-api",
   "version": "1.0.7",
-  "author": "Mark Lisé",
-  "contributors": [
-    "Mark Lisé <mark@digitalspace.ca>"
-  ],
-  "description": "ACRFD API",
-  "keywords": [],
   "license": "Apache-2.0",
   "main": "app",
   "scripts": {
@@ -18,6 +12,10 @@
     "lint-fix:1": "eslint ./**/*.js --fix",
     "lint-fix:2": "prettier ./**/*.js --write --loglevel warn",
     "lint-fix": "npm-run-all -l -s -c lint-fix:*"
+  },
+  "engines": {
+    "node": ">= 10.0.0",
+    "npm": ">= 6.0.0"
   },
   "dependencies": {
     "@turf/helpers": "6.1.4",
@@ -66,17 +64,5 @@
     "prettier": "1.18.2",
     "shelljs": "0.8.3",
     "supertest": "4.0.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "prettier --write --loglevel warn",
-      "git add"
-    ]
   }
 }
