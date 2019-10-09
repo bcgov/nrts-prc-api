@@ -8,20 +8,7 @@ var getSanitizedFields = function(fields) {
   return _.remove(fields, function(f) {
     return (
       _.indexOf(
-        [
-          'name',
-          'commentNumber',
-          'comment',
-          'internal',
-          'dateAdded',
-          'commentAuthor',
-          'review',
-          '_addedBy',
-          '_commentPeriod',
-          'review',
-          'commentStatus',
-          'isDeleted'
-        ],
+        ['name', 'comment', 'internal', 'dateAdded', 'commentAuthor', '_addedBy', '_commentPeriod', 'isDeleted'],
         f
       ) !== -1
     );
@@ -70,7 +57,6 @@ exports.publicGet = function(args, res, next) {
         var sort_by = value.slice(1);
         // only accept certain fields
         switch (sort_by) {
-          case 'commentStatus':
           case 'dateAdded':
           case 'contactName':
             sort[sort_by] = order_by;
@@ -172,7 +158,6 @@ exports.protectedGet = function(args, res, next) {
         var sort_by = value.slice(1);
         // only accept certain fields
         switch (sort_by) {
-          case 'commentStatus':
           case 'dateAdded':
           case 'contactName':
             sort[sort_by] = order_by;
@@ -212,20 +197,11 @@ exports.unProtectedPost = function(args, res, next) {
   var Comment = mongoose.model('Comment');
   var comment = new Comment(obj);
 
-  comment.commentStatus = 'Pending';
   comment.dateAdded = Date.now();
 
   // Define security tag defaults
   comment.tags = [['sysadmin']];
-  comment.review.tags = [['sysadmin']];
-  comment.commentAuthor.tags = [['sysadmin']];
-
-  // Unless they request to be anon, make their stuff public.
-  // TODO: Contact name/location/org currently showing public
-  // when they request anonymous.
-  if (!comment.commentAuthor.requestedAnonymous) {
-    comment.commentAuthor.tags = [['sysadmin'], ['public']];
-  }
+  comment.commentAuthor.tags = [['sysadmin'], ['public']];
 
   // Never allow this to be updated
   comment.commentAuthor.internal.tags = [['sysadmin']];
@@ -248,25 +224,11 @@ exports.protectedPut = function(args, res, next) {
 
   // Strip security tags - these will not be updated on this route.
   delete obj.tags;
-  if (obj.review) {
-    delete obj.review.tags;
-    if (obj.commentStatus === 'Accepted') {
-      obj.review.tags = [['sysadmin'], ['public']];
-    } else if (obj.commentStatus === 'Pending') {
-      obj.review.tags = [['sysadmin']];
-    } else if (obj.commentStatus === 'Rejected') {
-      obj.review.tags = [['sysadmin']];
-    }
-  }
 
   if (obj.commentAuthor) {
     delete obj.commentAuthor.tags;
-    // Did they request anon?
-    if (obj.commentAuthor.requestedAnonymous) {
-      obj.commentAuthor.tags = [['sysadmin']];
-    } else {
-      obj.commentAuthor.tags = [['sysadmin'], ['public']];
-    }
+
+    obj.commentAuthor.tags = [['sysadmin'], ['public']];
 
     // Never allow this to be updated
     if (obj.commentAuthor.internal) {

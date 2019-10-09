@@ -280,7 +280,6 @@ describe('POST /public/comment', () => {
         expect(response.body).toHaveProperty('_id');
         Comment.findById(response.body['_id']).exec(function(error, comment) {
           expect(comment).not.toBeNull();
-          expect(comment.commentStatus).toBe('Pending');
           expect(comment.dateAdded).not.toBeNull();
           done();
         });
@@ -334,31 +333,6 @@ describe('POST /public/comment', () => {
           });
         });
     });
-
-    test('sets commentAuthor tags to sysadmin if requestedAnonymous', done => {
-      let commentObj = {
-        name: 'Victoria',
-        comment: 'Victoria is a great place',
-        commentAuthor: {
-          requestedAnonymous: true
-        }
-      };
-
-      request(app)
-        .post('/api/public/comment')
-        .send(commentObj)
-        .expect(200)
-        .then(response => {
-          expect(response.body).toHaveProperty('_id');
-          Comment.findById(response.body['_id']).exec(function(error, comment) {
-            expect(comment.commentAuthor).not.toBeNull();
-
-            expect(comment.commentAuthor.tags.length).toEqual(1);
-            expect(comment.commentAuthor.tags[0]).toEqual(expect.arrayContaining(['sysadmin']));
-            done();
-          });
-        });
-    });
   });
 });
 
@@ -398,80 +372,6 @@ describe('PUT /comment/:id', () => {
       .then(response => {
         done();
       });
-  });
-
-  describe('comment author tags', () => {
-    test('sets sysadmin tags when commentAuthor requestedAnonymous ', done => {
-      let updateData = {
-        commentAuthor: {
-          requestedAnonymous: true
-        }
-      };
-      let uri = '/api/comment/' + existingComment._id;
-      request(app)
-        .put(uri, updateData)
-        .send(updateData)
-        .then(response => {
-          Comment.findById(existingComment._id).exec(function(error, updatedComment) {
-            expect(updatedComment).not.toBeNull();
-            expect(updatedComment.commentAuthor).not.toBeNull();
-            let commentAuthorTags = updatedComment.commentAuthor.tags;
-            expect(commentAuthorTags.length).toEqual(1);
-            expect(commentAuthorTags[0]).toEqual(expect.arrayContaining(['sysadmin']));
-            done();
-          });
-        });
-    });
-
-    test('sets sysadmin and public tags when requestedAnonymous is not true ', done => {
-      let updateData = {
-        commentAuthor: {
-          requestedAnonymous: false
-        }
-      };
-      let uri = '/api/comment/' + existingComment._id;
-      request(app)
-        .put(uri, updateData)
-        .send(updateData)
-        .then(response => {
-          Comment.findById(existingComment._id).exec(function(error, updatedComment) {
-            expect(updatedComment).not.toBeNull();
-            expect(updatedComment.commentAuthor).not.toBeNull();
-            let commentAuthorTags = updatedComment.commentAuthor.tags;
-            expect(commentAuthorTags.length).toEqual(2);
-            expect(commentAuthorTags[0]).toEqual(expect.arrayContaining(['sysadmin']));
-            expect(commentAuthorTags[1]).toEqual(expect.arrayContaining(['public']));
-            done();
-          });
-        });
-    });
-
-    test('does not allow setting internal tags ', done => {
-      let updateData = {
-        commentAuthor: {
-          requestedAnonymous: true,
-          internal: {
-            tags: [['sysadmin'], ['public']]
-          }
-        }
-      };
-      let uri = '/api/comment/' + existingComment._id;
-      request(app)
-        .put(uri, updateData)
-        .send(updateData)
-        .then(response => {
-          Comment.findById(existingComment._id).exec(function(error, updatedComment) {
-            expect(updatedComment).not.toBeNull();
-            expect(updatedComment.commentAuthor).not.toBeNull();
-            expect(updatedComment.commentAuthor.internal).not.toBeNull();
-
-            let commentAuthorInternalTags = updatedComment.commentAuthor.internal.tags;
-            expect(commentAuthorInternalTags.length).toEqual(1);
-            expect(commentAuthorInternalTags[0]).toEqual(expect.arrayContaining(['sysadmin']));
-            done();
-          });
-        });
-    });
   });
 
   test('does not allow updating tags', done => {
