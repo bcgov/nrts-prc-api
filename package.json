@@ -1,23 +1,21 @@
 {
   "name": "nrts-prc-api",
   "version": "1.0.7",
-  "author": "Mark Lisé",
-  "contributors": [
-    "Mark Lisé <mark@digitalspace.ca>"
-  ],
-  "description": "ACRFD API",
-  "keywords": [],
   "license": "Apache-2.0",
   "main": "app",
   "scripts": {
     "start": "node app",
     "test": "echo Test suite should be run with `npm run tests` or `npm run tests-ci`",
-    "tests": "SET UPLOAD_DIRECTORY=./api/test/uploads/ & jest --runInBand",
-    "tests-debug": "node --inspect node_modules/.bin/jest --runInBand",
+    "tests": "SET \"UPLOAD_DIRECTORY=./api/test/uploads/\" & jest --runInBand",
+    "tests-debug": "SET \"UPLOAD_DIRECTORY=./api/test/uploads/\" & node --inspect ./node_modules/jest/bin/jest.js --runInBand",
     "lint": "eslint .",
     "lint-fix:1": "eslint ./**/*.js --fix",
     "lint-fix:2": "prettier ./**/*.js --write --loglevel warn",
     "lint-fix": "npm-run-all -l -s -c lint-fix:*"
+  },
+  "engines": {
+    "node": ">= 10.0.0",
+    "npm": ">= 6.0.0"
   },
   "dependencies": {
     "@turf/helpers": "6.1.4",
@@ -66,17 +64,5 @@
     "prettier": "1.18.2",
     "shelljs": "0.8.3",
     "supertest": "4.0.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "prettier --write --loglevel warn",
-      "git add"
-    ]
   }
 }

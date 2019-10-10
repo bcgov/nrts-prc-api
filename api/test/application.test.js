@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const request = require('supertest');
 // const nock = require('nock');
 // const tantalisResponse = require('./fixtures/tantalis_response.json');
-const fieldNames = ['description', 'tantalisID'];
 const _ = require('lodash');
 const TTLSUtils = require('../helpers/ttlsUtils');
 
@@ -14,7 +13,13 @@ require('../helpers/models/application');
 require('../helpers/models/feature');
 const Application = mongoose.model('Application');
 const Feature = mongoose.model('Feature');
+
+/*************************************
+  Mock Route Handlers + Helper Methods
+*************************************/
+
 const idirUsername = 'idir/i_am_a_bot';
+const fieldNames = ['description', 'tantalisID'];
 
 function paramsWithAppId(req) {
   let params = test_helper.buildParams({ appId: req.params.id });
@@ -68,6 +73,10 @@ app.put('/api/application/:id/unpublish', function(req, res) {
   return applicationController.protectedUnPublish(paramsWithAppId(req), res);
 });
 
+/*************************************
+  General Test Data + Helper Methods
+*************************************/
+
 const applicationsData = [
   { description: 'SPECIAL', name: 'Special Application', tags: [['public'], ['sysadmin']], isDeleted: false },
   { description: 'VANILLA', name: 'Vanilla Ice Cream', tags: [['public']], isDeleted: false },
@@ -87,6 +96,10 @@ function setupApplications(applicationsData) {
       });
   });
 }
+
+/*************************************
+  Tests
+*************************************/
 
 describe('GET /application', () => {
   test('returns a list of non-deleted, public and sysadmin Applications', done => {
@@ -336,7 +349,7 @@ describe('POST /application', () => {
         });
     });
 
-    test('defaults to sysadmin for tags and review tags', done => {
+    test('defaults to sysadmin for tags', done => {
       request(app)
         .post('/api/application')
         .send(applicationObj)
@@ -505,7 +518,7 @@ describe('POST /application', () => {
 
   describe('when the login call fails', () => {
     let loginPromise = new Promise(function(resolve, reject) {
-      reject({ statusCode: 503, message: 'Ooh boy something went wrong' });
+      reject({ code: 503, message: 'Ooh boy something went wrong' });
     });
 
     beforeEach(() => {

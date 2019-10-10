@@ -1,7 +1,8 @@
 /**
  * Database Migration Script
  *
- * Deletes the description field from the Decision collection
+ * Deletes the description field from the Decision collection.
+ * Why? The business doesn't use or want this field, as they only ever say "see attached Documents" anyways.
  *
  * Note:
  *  - Safe to run multiple times.
