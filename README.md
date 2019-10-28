@@ -97,6 +97,8 @@ Useful Note: The handler function for each route is specified by the `operationI
 
 Recommend reviewing the [Open API Specification](https://swagger.io/docs/specification/about/) before making any changes to the `swagger.yaml` file.
 
+ - Updates to the swagger may require updates to the mock handlers in the test files.  See section on API testing below.
+
 # Logging
 
 A centralized logger has been created (see `api/helpers/logger.js`).
@@ -128,23 +130,23 @@ log.debug('Useful for logging objects and other developer data', JSON.stringify(
 
 ## Info
 
+This project contains two kinds of unit tests.  Regular unit tests and API unit tests, which require some special considerations and setup, as detailed in the API Testing section below.
+
 ### Technolgies used
 
-[Jasmine](https://jasmine.github.io/), [Karma](https://karma-runner.github.io/latest/index.html), [Protractor](http://www.protractortest.org/)
+[Jest](jasmine), [SuperTest](https://www.npmjs.com/package/supertest), [Nock](https://www.npmjs.com/package/nock), [Mongodb-Memory-Server](https://www.npmjs.com/package/mongodb-memory-server)
 
-## Initial Setup
+## Run Tests
 
-1) Start server and create database by running `npm start` in root
+* Run the unit and api tests.
+  * Note: the `package.json` `tests` command sets the `UPLOAD_DIRECTORY` environment variable, the command for which may be OS specific and therefore may need adjusting depending on your machines OS.
 
-2) Add Admin user to users collection
+```
+npm run tests
+```
 
-    ``
-    db.users.insert({  "username": #{username}, "password": #{password}, roles: [['sysadmin'],['public']] })
-    ``
 
-3) Seed local database as described in [seed README](seed/README.md)
-
-## API Testing
+## API Tests
 
 This project is using [jest](http://jestjs.io/) as a testing framework. You can run tests with
 `yarn test` or `jest`. Running either command with the `--watch` flag will re-run the tests every time a file is changed.
@@ -234,19 +236,10 @@ This project uses [Keycloak](https://www.keycloak.org/) to handle authentication
 
 Required environment variables:
 ```
-TTLS_API_ENDPOINT="<see below>"
-WEBADE_AUTH_ENDPOINT="<see below>"
-WEBADE_USERNAME="<see below>"
-WEBADE_PASSWORD="<see below>"
-```
-_Note: Get the values for TTLS_API_ENDPOINT, WEBADE_AUTH_ENDPOINT, WEBADE_USERNAME and WEBADE_PASSWORD, at [Openshift](https://console.pathfinder.gov.bc.ca:8443/console/projects) &rarr; Natural Resource Public Review and Comment (dev) project &rarr; Applications &rarr; Pods &rarr; prc-api pod &rarr; Environment._
-
-2. Before starting the local Admin project, in file `src/app/services/keycloak.service.ts`, around line 17, change code to:
-```
-case 'http://localhost:4200':
-  // Local
-  this.keycloakEnabled = true;
-  break;
+TTLS_API_ENDPOINT="<see OpenShift api deployment variables>"
+WEBADE_AUTH_ENDPOINT="<see OpenShift api deployment variables>"
+WEBADE_USERNAME="<see OpenShift api deployment variables>"
+WEBADE_PASSWORD="<see OpenShift ttls-api-test secret>"
 ```
 
 # VSCode Extensions
