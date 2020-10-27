@@ -332,7 +332,7 @@ loginToACRFD(username, password)
       '4. Fetching all Tantalis applications that have had their status history effective date updated in the last week.'
     );
     const lastWeek = moment()
-      .subtract(1, 'week')
+      .subtract(3, 'year')
       .format('YYYYMMDD');
     return TTLSUtils.getAllApplicationIDs(_accessToken, { updated: lastWeek });
   })
