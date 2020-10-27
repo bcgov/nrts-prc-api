@@ -168,7 +168,7 @@ const getApplicationsToUnpublish = function() {
       },
       (error, res, body) => {
         if (error) {
-          defaultLog.error(' - getApplicationsToUnpublish error:', error);
+          defaultLog.error(' - getApplicationsToUnpublish error:', error, res, body);
           reject(error);
         } else if (res.statusCode !== 200) {
           defaultLog.warn(' - getApplicationsToUnpublish response:', res.statusCode, body);
