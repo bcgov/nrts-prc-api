@@ -51,9 +51,9 @@ spec:
               command:
                 - bash
                 - -c
-                - 'npm install --prefix seed/;
+                - 'npm install --prefix seed/ &&
                   node seed/shapesMigration/updateShapes.js "${API_USERNAME}" "${API_PASSWORD}" "${API_PROTOCOL}" "${API_HOST}" "${API_PORT}" "${CLIENT_ID}" "${GRANT_TYPE}" "${AUTH_ENDPOINT}";
-                  if [ "${PIPESTATUS[0]}" -ne "1" ];
+                  if [ "${PIPESTATUS[0]}" -eq "0" ];
                   then curl -X POST -H "Content-type: application/json" --data "${JSON_PAYLOAD}" "${NOTIFICATION_URL}";
                   else curl -X POST -H "Content-type: application/json" --data "${JSON_PAYLOAD_FAIL}" "${NOTIFICATION_URL}";
                   fi;'
