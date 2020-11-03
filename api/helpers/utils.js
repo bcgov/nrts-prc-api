@@ -11,7 +11,7 @@ const defaultLog = require('./logger')('utils');
 
 var _serviceHost = process.env.CLAMAV_SERVICE_HOST || '127.0.0.1';
 var _servicePort = process.env.CLAMAV_SERVICE_PORT || '3310';
-var MAX_LIMIT = 1000;
+var MAX_LIMIT = 100000;
 var DEFAULT_PAGESIZE = 100;
 
 exports.buildQuery = function(property, values, query) {
