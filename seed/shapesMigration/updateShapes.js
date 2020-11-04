@@ -33,14 +33,21 @@ let client_id = '';
 let grant_type = '';
 let auth_endpoint = 'http://localhost:3000/api/login/token';
 let _accessToken = '';
+let time_count = 1; // Suggested defaults
+let time_metric = 'week'; // Suggested defaults
 
 const args = process.argv.slice(2);
 defaultLog.info('=======================================================');
-if (args.length !== 8) {
-  defaultLog.error(
-    'Please specify proper parameters: <username> <password> <protocol> <host> <port> <client_id> <grant_type> <auth_endpoint>'
+if (args.length < 8 || args.length === 9 || args.length > 10) {
+  defaultLog.error('Invalid used of script');
+  defaultLog.info(
+    'Please specify proper parameters: <username> <password> <protocol> <host> <port> <client_id> <grant_type> <auth_endpoint> <time_count> <time_metric>'
   );
-  defaultLog.info('Example: node updateShapes.js admin admin http localhost 3000 client_id grant_type auth_endpoint');
+  defaultLog.info('time_count and time_metric are optional, but must be used together.');
+  defaultLog.info('Example 1: node updateShapes.js admin admin http localhost 3000 client_id grant_type auth_endpoint');
+  defaultLog.info(
+    'Example 2: node updateShapes.js admin admin http localhost 3000 client_id grant_type auth_endpoint 2 year'
+  );
   defaultLog.info('=======================================================');
   process.exit(1);
   return;
@@ -53,6 +60,10 @@ if (args.length !== 8) {
   client_id = args[5];
   grant_type = args[6];
   auth_endpoint = args[7];
+  if (args[8] && args[9]) {
+    time_count = args[8];
+    time_metric = args[9];
+  }
   uri = protocol + '://' + host + ':' + port + '/';
   defaultLog.info('Using connection:', uri);
   defaultLog.info('-----------------------------------------------');
@@ -331,10 +342,10 @@ loginToACRFD(username, password)
     defaultLog.info(
       '4. Fetching all Tantalis applications that have had their status history effective date updated in the last week.'
     );
-    const lastWeek = moment()
-      .subtract(2, 'year')
+    const timeSince = moment()
+      .subtract(time_count, time_metric)
       .format('YYYYMMDD');
-    return TTLSUtils.getAllApplicationIDs(_accessToken, { updated: lastWeek });
+    return TTLSUtils.getAllApplicationIDs(_accessToken, { updated: timeSince });
   })
   .then(recentlyUpdatedApplicationIDs => {
     defaultLog.info('-----------------------------------------------');
