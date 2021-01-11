@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 const defaultLog = require('./logger')('auth');
 
-const ISSUER = process.env.SSO_ISSUER || 'https://sso-dev.pathfinder.gov.bc.ca/auth/realms/prc';
+const ISSUER = process.env.SSO_ISSUER || 'https://dev.oidc.gov.bc.ca/auth/realms/prc';
 const JWKSURI =
-  process.env.SSO_JWKSURI || 'https://sso-dev.pathfinder.gov.bc.ca/auth/realms/prc/protocol/openid-connect/certs';
+  process.env.SSO_JWKSURI || 'https://dev.oidc.gov.bc.ca/auth/realms/prc/protocol/openid-connect/certs';
 const JWT_SIGN_EXPIRY = process.env.JWT_SIGN_EXPIRY || '1440'; // 24 hours in minutes.
 const SECRET = process.env.SECRET || 'defaultSecret';
 const KEYCLOAK_ENABLED = process.env.KEYCLOAK_ENABLED || 'true';
