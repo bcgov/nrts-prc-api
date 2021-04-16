@@ -2,7 +2,7 @@
   "kind": "Template",
   "apiVersion": "v1",
   "metadata": {
-    "name": "nrts-prc-api-beta",
+    "name": "nrts-prc-api",
     "annotations": {
       "description": "Template for Node.js applications with a MongoDB database, based on OpenShift provided templates 'nodejs-mongodb-example' and 'mongodb-persistent-template'.",
       "tags": "quickstart,nodejs,mongodb",
@@ -10,7 +10,7 @@
     }
   },
   "labels": {
-    "template": "nrts-prc-api-beta"
+    "template": "nrts-prc-api"
   },
   "objects": [
     {
@@ -124,7 +124,7 @@
             "containers": [
               {
                 "name": "${NAME}",
-                "image": " ",
+                "image": "image-registry.openshift-image-registry.svc:5000/86cabb-tools/mongodb:3.6",
                 "ports": [
                   {
                     "containerPort": 3000
@@ -229,11 +229,11 @@
             "type": "ImageChange",
             "imageChangeParams": {
               "automatic": true,
-              "containerNames": ["mongodb"],
+              "containerNames": ["${DATABASE_SERVICE_NAME}-${NAME}"],
               "from": {
                 "kind": "ImageStreamTag",
                 "namespace": "${MONGO_IMAGE_NAMESPACE}",
-                "name": "mongodb:3.2"
+                "name": "mongodb:3.6"
               }
             }
           },
@@ -331,7 +331,7 @@
       "displayName": "Name",
       "description": "The name assigned to all of the frontend objects defined in this template.",
       "required": true,
-      "value": "nrts-prc-api-beta"
+      "value": "nrts-prc-api"
     },
     {
       "name": "MONGO_IMAGE_NAMESPACE",
@@ -354,13 +354,12 @@
     {
       "name": "APPLICATION_DOMAIN",
       "displayName": "Application Hostname",
-      "description": "The exposed hostname that will route to the Node.js service, if left blank a value will be defaulted.",
-      "value": "nrts-prc-beta.pathfinder.gov.bc.ca/api"
+      "description": "The exposed hostname that will route to the Node.js service, if left blank a value will be defaulted."
     },
     {
       "name": "DATABASE_SERVICE_NAME",
       "displayName": "Database Service Name",
-      "value": "mongodb-beta"
+      "value": "mongodb"
     },
     {
       "name": "DATABASE_USER",
@@ -406,7 +405,7 @@
       "name": "DOCUMENT_VOLUME_CAPACITY",
       "displayName": "Document Volume Capacity",
       "description": "Volume space available for Document uploads, e.g. 512Mi, 2Gi.",
-      "value": "2Gi",
+      "value": "20Gi",
       "required": true
     },
     {
@@ -420,14 +419,14 @@
       "name": "APP_IMAGE_NAMESPACE",
       "displayName": "Namespace containing application images.",
       "description": "Namespace containing application images.",
-      "value": "nrts-prc-tools",
+      "value": "86cabb-tools",
       "required": true
     },
     {
       "name": "APP_DEPLOYMENT_TAG",
       "displayName": "Image tag to watch for changes and trigger deployment.",
       "description": "Image tag to watch for changes and trigger deployment.",
-      "value": "beta",
+      "value": "prod",
       "required": true
     },
     {
