@@ -10,7 +10,7 @@
     "@turf/helpers": "6.1.4",
     "body-parser": "1.19.0",
     "fast-csv": "2.5.0",
-    "lodash": "4.17.11",
+    "lodash": "4.17.21",
     "moment": "2.24.0",
     "mongoose": "5.4.17",
     "request": "2.88.0",
