@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 const defaultLog = require('./logger')('auth');
 
-const ISSUER = process.env.SSO_ISSUER || 'https://dev.oidc.gov.bc.ca/auth/realms/prc';
+const ISSUER = process.env.SSO_ISSUER || 'https://test.loginproxy.gov.bc.ca/auth/realms/standard';
 const JWKSURI =
-  process.env.SSO_JWKSURI || 'https://dev.oidc.gov.bc.ca/auth/realms/prc/protocol/openid-connect/certs';
+  process.env.SSO_JWKSURI || 'https://test.loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/certs';
 const JWT_SIGN_EXPIRY = process.env.JWT_SIGN_EXPIRY || '1440'; // 24 hours in minutes.
 const SECRET = process.env.SECRET || 'defaultSecret';
 const KEYCLOAK_ENABLED = process.env.KEYCLOAK_ENABLED || 'true';
@@ -62,14 +62,14 @@ function _verifySecret(currentScopes, tokenString, secret, req, callback, sendEr
     // defaultLog.info("decodedToken:", decodedToken);
 
     // check if the JWT was verified correctly
-    if (verificationError == null && Array.isArray(currentScopes) && decodedToken && decodedToken.realm_access.roles) {
+    if (verificationError == null && Array.isArray(currentScopes) && decodedToken && decodedToken.client_roles) {
       defaultLog.info('JWT decoded.');
       defaultLog.debug('JWT token:', decodedToken);
 
       // check if the role is valid for this endpoint
-      var roleMatch = currentScopes.some(r => decodedToken.realm_access.roles.indexOf(r) >= 0);
+      var roleMatch = currentScopes.some(r => decodedToken.client_roles.indexOf(r) >= 0);
       defaultLog.debug('currentScopes', JSON.stringify(currentScopes));
-      defaultLog.debug('decodedToken.realm_access.roles', decodedToken.realm_access.roles);
+      defaultLog.debug('decodedToken.client_roles', decodedToken.client_roles);
       defaultLog.debug('role match', roleMatch);
 
       // check if the dissuer matches
@@ -114,9 +114,7 @@ exports.issueToken = function(user, deviceId, scopes) {
     deviceId: deviceId,
     jti: jti,
     iss: ISSUER,
-    realm_access: {
-      roles: scopes
-    }
+    client_roles: scopes
   };
 
   var token = jwt.sign(payload, SECRET, { expiresIn: JWT_SIGN_EXPIRY + 'm' });
