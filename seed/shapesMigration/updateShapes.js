@@ -105,8 +105,7 @@ const loginToACRFD = function(username, password) {
     const body = querystring.stringify({
       grant_type: grant_type,
       client_id: client_id,
-      username: username,
-      password: password
+      client_secret: password
     });
     const contentLength = body.length;
     request.post(
