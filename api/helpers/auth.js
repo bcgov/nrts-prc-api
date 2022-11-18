@@ -58,19 +58,30 @@ exports.verifyToken = function(req, authOrSecDef, token, callback) {
 
 function _verifySecret(currentScopes, tokenString, secret, req, callback, sendError) {
   jwt.verify(tokenString, secret, function(verificationError, decodedToken) {
-     //defaultLog.debug("verificationError:", verificationError);
-     defaultLog.debug("decodedToken:", decodedToken);
+    // defaultLog.info("verificationError:", verificationError);
+    // defaultLog.info("decodedToken:", decodedToken);
+
+    // the service account (clientId acrfd-api-8384) does not have any roles.  It's used as part of the scheduled cron job to update shape data
+    var serviceAccount = false;
+    if (decodedToken.clientId && decodedToken.clientId == 'acrfd-api-8384') {
+      serviceAccount = true;
+    }
 
     // check if the JWT was verified correctly
-    if (verificationError == null && Array.isArray(currentScopes) && decodedToken) {// && decodedToken.client_roles) {
+    if (verificationError == null && Array.isArray(currentScopes) && decodedToken && (serviceAccount || decodedToken.client_roles)) {
       defaultLog.info('JWT decoded.');
       defaultLog.debug('JWT token:', decodedToken);
 
-      // check if the role is valid for this endpoint
-      var roleMatch = currentScopes.some(r => decodedToken.client_roles.indexOf(r) >= 0);
-      defaultLog.debug('currentScopes', JSON.stringify(currentScopes));
-      defaultLog.debug('decodedToken.client_roles', decodedToken.client_roles);
-      defaultLog.debug('role match', roleMatch);
+      var roleMatch;
+
+      // this may be the service account acrfd-api-8384.  If so, there won't be any roles.  If not, check to make sure the user logging in has the correct roles
+      if (decodedToken.client_roles) {
+        // check if the role is valid for this endpoint
+        roleMatch = currentScopes.some(r => decodedToken.client_roles.indexOf(r) >= 0);
+        defaultLog.debug('currentScopes', JSON.stringify(currentScopes));
+        defaultLog.debug('decodedToken.client_roles', decodedToken.client_roles);
+        defaultLog.debug('role match', roleMatch);
+      }
 
       // check if the dissuer matches
       var issuerMatch = decodedToken.iss == ISSUER;
@@ -78,7 +89,7 @@ function _verifySecret(currentScopes, tokenString, secret, req, callback, sendEr
       defaultLog.debug('ISSUER', ISSUER);
       defaultLog.debug('issuerMatch', issuerMatch);
 
-      if (roleMatch && issuerMatch) {
+      if ((serviceAccount || roleMatch) && issuerMatch) {
         // add the token to the request so that we can access it in the endpoint code if necessary
         req.swagger.params.auth_payload = decodedToken;
         defaultLog.info('JWT Verified.');
