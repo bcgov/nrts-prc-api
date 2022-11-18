@@ -58,11 +58,11 @@ exports.verifyToken = function(req, authOrSecDef, token, callback) {
 
 function _verifySecret(currentScopes, tokenString, secret, req, callback, sendError) {
   jwt.verify(tokenString, secret, function(verificationError, decodedToken) {
-    // defaultLog.info("verificationError:", verificationError);
-    // defaultLog.info("decodedToken:", decodedToken);
+     //defaultLog.debug("verificationError:", verificationError);
+     defaultLog.debug("decodedToken:", decodedToken);
 
     // check if the JWT was verified correctly
-    if (verificationError == null && Array.isArray(currentScopes) && decodedToken && decodedToken.client_roles) {
+    if (verificationError == null && Array.isArray(currentScopes) && decodedToken) {// && decodedToken.client_roles) {
       defaultLog.info('JWT decoded.');
       defaultLog.debug('JWT token:', decodedToken);
 
