@@ -352,6 +352,7 @@ const internalGetAllApplicationIDs = function(
           reject({ code: (res && res.statusCode) || null });
         } else {
           try {
+            defaultLog.debug(body);
             var obj = JSON.parse(body);
             defaultLog.debug('o:', JSON.stringify(obj));
             _.forEach(obj.elements, function(element) {
