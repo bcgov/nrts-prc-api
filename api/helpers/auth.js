@@ -59,7 +59,7 @@ exports.verifyToken = function(req, authOrSecDef, token, callback) {
 function _verifySecret(currentScopes, tokenString, secret, req, callback, sendError) {
   jwt.verify(tokenString, secret, function(verificationError, decodedToken) {
     // defaultLog.info("verificationError:", verificationError);
-    // defaultLog.info("decodedToken:", decodedToken);
+    defaultLog.debug("decodedToken:" + decodedToken);
 
     // the service account (clientId acrfd-api-8384) does not have any roles.  It's used as part of the scheduled cron job to update shape data
     var serviceAccount = false;
