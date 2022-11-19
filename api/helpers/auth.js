@@ -64,9 +64,10 @@ function _verifySecret(currentScopes, tokenString, secret, req, callback, sendEr
 
     // the service account (clientId acrfd-api-4384) does not have any roles.  It's used as part of the scheduled cron job to update shape data
     var isServiceAccount = false;
-    defaultLog.info("Service Account: " + decodedToken.clientId);
-    if (decodedToken.clientId && decodedToken.clientId == SERVICE_ACCOUNT) {
+    
+    if (decodedToken && decodedToken.clientId && decodedToken.clientId == SERVICE_ACCOUNT) {
       defaultLog.info("Using service account");
+      defaultLog.info("Service Account: " + decodedToken.clientId);
       isServiceAccount = true;
     }
 
@@ -92,7 +93,7 @@ function _verifySecret(currentScopes, tokenString, secret, req, callback, sendEr
       defaultLog.debug('ISSUER', ISSUER);
       defaultLog.debug('issuerMatch', issuerMatch);
 
-      if ((serviceAccount || roleMatch) && issuerMatch) {
+      if ((isServiceAccount || roleMatch) && issuerMatch) {
         // add the token to the request so that we can access it in the endpoint code if necessary
         req.swagger.params.auth_payload = decodedToken;
         defaultLog.info('JWT Verified.');
