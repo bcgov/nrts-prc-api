@@ -341,8 +341,8 @@ loginToACRFD(username, password)
     defaultLog.info(
       '4. Fetching all Tantalis applications that have had their status history effective date updated in the last week.'
     );
-    log.debug("Time count", time_count);
-    log.debug("Time Metric", time_metric);
+    defaultLog.debug("Time count", time_count);
+    defaultLog.debug("Time Metric", time_metric);
 
     const timeSince = moment()
       .subtract(time_count, time_metric)
