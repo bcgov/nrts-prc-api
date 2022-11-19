@@ -10,6 +10,7 @@ const JWKSURI =
 const JWT_SIGN_EXPIRY = process.env.JWT_SIGN_EXPIRY || '1440'; // 24 hours in minutes.
 const SECRET = process.env.SECRET || 'defaultSecret';
 const KEYCLOAK_ENABLED = process.env.KEYCLOAK_ENABLED || 'true';
+const SERVICE_ACCOUNT = process.env.SERVICE_ACCOUNT || 'acrfd-api-4384';
 
 exports.verifyToken = function(req, authOrSecDef, token, callback) {
   defaultLog.info('verifying token');
@@ -59,24 +60,24 @@ exports.verifyToken = function(req, authOrSecDef, token, callback) {
 function _verifySecret(currentScopes, tokenString, secret, req, callback, sendError) {
   jwt.verify(tokenString, secret, function(verificationError, decodedToken) {
     // defaultLog.info("verificationError:", verificationError);
-    defaultLog.debug("decodedToken:" + decodedToken);
+    defaultLog.debug("decodedToken:" + JSON.stringify(decodedToken));
 
-    // the service account (clientId acrfd-api-8384) does not have any roles.  It's used as part of the scheduled cron job to update shape data
-    var serviceAccount = false;
+    // the service account (clientId acrfd-api-4384) does not have any roles.  It's used as part of the scheduled cron job to update shape data
+    var isServiceAccount = false;
     defaultLog.info("Service Account: " + decodedToken.clientId);
-    if (decodedToken.clientId && decodedToken.clientId == 'acrfd-api-8384') {
+    if (decodedToken.clientId && decodedToken.clientId == SERVICE_ACCOUNT) {
       defaultLog.info("Using service account");
-      serviceAccount = true;
+      isServiceAccount = true;
     }
 
     // check if the JWT was verified correctly
-    if (verificationError == null && Array.isArray(currentScopes) && decodedToken && (serviceAccount || decodedToken.client_roles)) {
+    if (verificationError == null && Array.isArray(currentScopes) && decodedToken && (isServiceAccount || decodedToken.client_roles)) {
       defaultLog.info('JWT decoded.');
       defaultLog.debug('JWT token:' + decodedToken);
 
       var roleMatch;
 
-      // this may be the service account acrfd-api-8384.  If so, there won't be any roles.  If not, check to make sure the user logging in has the correct roles
+      // this may be the service account acrfd-api-4384.  If so, there won't be any roles.  If not, check to make sure the user logging in has the correct roles
       if (decodedToken.client_roles) {
         // check if the role is valid for this endpoint
         roleMatch = currentScopes.some(r => decodedToken.client_roles.indexOf(r) >= 0);
