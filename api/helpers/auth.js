@@ -63,14 +63,16 @@ function _verifySecret(currentScopes, tokenString, secret, req, callback, sendEr
 
     // the service account (clientId acrfd-api-8384) does not have any roles.  It's used as part of the scheduled cron job to update shape data
     var serviceAccount = false;
+    defaultLog.info("Service Account: " + decodedToken.clientId);
     if (decodedToken.clientId && decodedToken.clientId == 'acrfd-api-8384') {
+      defaultLog.info("Using service account");
       serviceAccount = true;
     }
 
     // check if the JWT was verified correctly
     if (verificationError == null && Array.isArray(currentScopes) && decodedToken && (serviceAccount || decodedToken.client_roles)) {
       defaultLog.info('JWT decoded.');
-      defaultLog.debug('JWT token:', decodedToken);
+      defaultLog.debug('JWT token:' + decodedToken);
 
       var roleMatch;
 
