@@ -257,6 +257,7 @@
               {
                 "name": "mongodb-${NAME}",
                 "image": " ",
+                "command": ["mongod", "--networkMessageCompressors", "snappy"],
                 "ports": [
                   {
                     "containerPort": 27017
